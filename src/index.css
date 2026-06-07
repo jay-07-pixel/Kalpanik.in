@@ -86,7 +86,9 @@ body {
 
 .content-layer a,
 .content-layer button,
-.content-layer input {
+.content-layer input,
+.content-layer form,
+.waitlist-panel {
   pointer-events: auto;
 }
 

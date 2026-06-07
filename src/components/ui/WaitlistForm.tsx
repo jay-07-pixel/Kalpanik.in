@@ -38,7 +38,18 @@ export function WaitlistForm() {
         body: JSON.stringify({ email: email.trim() }),
       });
 
-      const data = (await res.json()) as ApiResponse;
+      let data: ApiResponse | null = null;
+      try {
+        data = (await res.json()) as ApiResponse;
+      } catch {
+        setStatus("error");
+        setMessage(
+          res.status >= 500
+            ? "Waitlist server is unavailable. Make sure the API is running (npm run dev:api)."
+            : "Unexpected response from the server. Please try again."
+        );
+        return;
+      }
 
       if (res.status === 409 || data.error === "DUPLICATE_EMAIL") {
         setStatus("duplicate");
