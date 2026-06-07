@@ -1,40 +1,63 @@
 import { useState, type FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useApp } from "../../context/AppContext";
-import { SITE, WAITLIST_KEY, WAITLIST_ENDPOINT } from "../../constants/site";
+import { SITE, WAITLIST_ENDPOINT } from "../../constants/site";
 
-type Status = "idle" | "loading" | "success" | "error";
+type Status = "idle" | "loading" | "success" | "error" | "duplicate";
+
+interface ApiResponse {
+  success: boolean;
+  error?: string;
+  message?: string;
+}
 
 export function WaitlistForm() {
   const { theme } = useApp();
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<Status>("idle");
+  const [message, setMessage] = useState("");
+
+  const resetFeedback = () => {
+    if (status === "error" || status === "duplicate") {
+      setStatus("idle");
+      setMessage("");
+    }
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !email.includes("@")) return;
 
     setStatus("loading");
+    setMessage("");
 
     try {
-      if (WAITLIST_ENDPOINT) {
-        const res = await fetch(WAITLIST_ENDPOINT, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: email.trim() }),
-        });
-        if (!res.ok) throw new Error("Request failed");
-      } else {
-        const existing: string[] = JSON.parse(localStorage.getItem(WAITLIST_KEY) || "[]");
-        if (!existing.includes(email.trim())) {
-          localStorage.setItem(WAITLIST_KEY, JSON.stringify([...existing, email.trim()]));
-        }
-        await new Promise((r) => setTimeout(r, 600));
+      const res = await fetch(WAITLIST_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+
+      const data = (await res.json()) as ApiResponse;
+
+      if (res.status === 409 || data.error === "DUPLICATE_EMAIL") {
+        setStatus("duplicate");
+        setMessage(data.message ?? "This email is already on the waitlist.");
+        return;
       }
+
+      if (!res.ok || !data.success) {
+        setStatus("error");
+        setMessage(data.message ?? "Something went wrong. Please try again.");
+        return;
+      }
+
       setStatus("success");
+      setMessage(data.message ?? "You're on the list. Imagination awaits.");
       setEmail("");
     } catch {
       setStatus("error");
+      setMessage("Unable to reach the server. Please try again.");
     }
   };
 
@@ -63,7 +86,7 @@ export function WaitlistForm() {
             animate={{ opacity: 1, scale: 1 }}
             style={{ color: theme.accent }}
           >
-            ✦ You're on the list. Imagination awaits.
+            ✦ {message}
           </motion.div>
         ) : (
           <motion.form
@@ -76,7 +99,10 @@ export function WaitlistForm() {
             <input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                resetFeedback();
+              }}
               placeholder="your@email.com"
               required
               disabled={status === "loading"}
@@ -104,12 +130,20 @@ export function WaitlistForm() {
         )}
       </AnimatePresence>
 
-      {status === "error" && (
-        <p className="waitlist-error" style={{ color: "#f87171" }}>
-          Something went wrong — try{" "}
-          <a href={`mailto:${SITE.email}?subject=Waitlist`} style={{ color: theme.accent }}>
-            {SITE.email}
-          </a>
+      {(status === "error" || status === "duplicate") && (
+        <p
+          className={`waitlist-error${status === "duplicate" ? " waitlist-error--duplicate" : ""}`}
+          style={{ color: status === "duplicate" ? theme.accentSoft : "#f87171" }}
+        >
+          {message}{" "}
+          {status === "error" && (
+            <>
+              Or email{" "}
+              <a href={`mailto:${SITE.email}?subject=Waitlist`} style={{ color: theme.accent }}>
+                {SITE.email}
+              </a>
+            </>
+          )}
         </p>
       )}
     </motion.div>

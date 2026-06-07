@@ -1,7 +1,8 @@
 export const SITE = {
   launchYear: 2026,
-  email: "hello@kalpanik.in",
+  email: "kalpanik432@gmail.com",
 } as const;
 
-export const WAITLIST_KEY = "kalpanik_waitlist";
-export const WAITLIST_ENDPOINT = import.meta.env.VITE_WAITLIST_URL as string | undefined;
+/** POST target for waitlist signups. Defaults to same-origin /api/waitlist in dev via Vite proxy. */
+export const WAITLIST_ENDPOINT =
+  import.meta.env.VITE_WAITLIST_URL?.trim() || "/api/waitlist";

@@ -384,6 +384,11 @@ body {
 .waitlist-error {
   margin-top: 0.75rem;
   font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.waitlist-error--duplicate {
+  font-weight: 500;
 }
 
 .imagination-counter {
