@@ -308,6 +308,12 @@ body {
   letter-spacing: 0.25em;
   text-transform: uppercase;
   margin-bottom: 1.75rem;
+  pointer-events: auto;
+}
+
+.coming-soon-badge-text {
+  cursor: default;
+  user-select: none;
 }
 
 .waitlist-panel {

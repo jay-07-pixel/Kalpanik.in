@@ -4,7 +4,11 @@ import { useIsMobile } from "../../hooks/useMediaQuery";
 import { SITE } from "../../constants/site";
 import { WaitlistForm } from "./WaitlistForm";
 
-export function ComingSoon() {
+interface ComingSoonProps {
+  onSecretBadgeClick?: () => void;
+}
+
+export function ComingSoon({ onSecretBadgeClick }: ComingSoonProps) {
   const { theme, mouse } = useApp();
   const isMobile = useIsMobile();
 
@@ -28,7 +32,10 @@ export function ComingSoon() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8, duration: 0.6 }}
         >
-          Coming Soon · {SITE.launchYear}
+          <span className="coming-soon-badge-text" onClick={onSecretBadgeClick} role="presentation">
+            Coming Soon
+          </span>
+          <span className="coming-soon-badge-sep"> · {SITE.launchYear}</span>
         </motion.div>
 
         <motion.div

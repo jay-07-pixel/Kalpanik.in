@@ -34,4 +34,10 @@ export const config = {
     replyTo: optional("MAIL_REPLY_TO", "kalpanik432@gmail.com"),
     notifyTo: optional("ADMIN_NOTIFY_EMAIL", "kalpanik432@gmail.com"),
   },
+  admin: {
+    email: required("ADMIN_EMAIL"),
+    password: required("ADMIN_PASSWORD"),
+    jwtSecret: required("JWT_SECRET"),
+    jwtExpiresIn: optional("JWT_EXPIRES_IN", "24h"),
+  },
 } as const;
