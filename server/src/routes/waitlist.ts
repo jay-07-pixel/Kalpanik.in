@@ -1,7 +1,10 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { addToWaitlist, DuplicateEmailError } from "../services/waitlistService.js";
-import { sendWaitlistConfirmation } from "../services/emailService.js";
+import {
+  sendWaitlistConfirmation,
+  sendWaitlistAdminNotification,
+} from "../services/emailService.js";
 import { isValidEmail, normalizeEmail } from "../utils/validateEmail.js";
 
 export const waitlistRouter = Router();
@@ -43,9 +46,12 @@ waitlistRouter.post("/", waitlistLimiter, async (req, res) => {
     const entry = await addToWaitlist(email);
 
     try {
-      await sendWaitlistConfirmation(entry.email);
+      await Promise.all([
+        sendWaitlistConfirmation(entry.email),
+        sendWaitlistAdminNotification(entry.email),
+      ]);
     } catch (mailError) {
-      console.error("[waitlist] Confirmation email failed:", mailError);
+      console.error("[waitlist] Email delivery failed:", mailError);
     }
 
     return res.status(201).json({

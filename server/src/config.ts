@@ -32,5 +32,6 @@ export const config = {
   mail: {
     fromName: optional("MAIL_FROM_NAME", "Kalpanik"),
     replyTo: optional("MAIL_REPLY_TO", "kalpanik432@gmail.com"),
+    notifyTo: optional("ADMIN_NOTIFY_EMAIL", "kalpanik432@gmail.com"),
   },
 } as const;

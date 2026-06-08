@@ -57,6 +57,58 @@ export async function sendWaitlistConfirmation(email: string): Promise<void> {
   });
 }
 
+function buildAdminNotificationHtml(email: string, joinedAt: string): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>New Kalpanik waitlist signup</title>
+  </head>
+  <body style="margin:0;padding:0;background:#f0f4f8;font-family:Inter,Arial,sans-serif;color:#0f172a;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="padding:40px 16px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border-radius:16px;padding:32px 28px;">
+            <tr>
+              <td>
+                <p style="margin:0 0 8px;font-size:12px;letter-spacing:0.25em;text-transform:uppercase;color:#0ea5e9;">Kalpanik Waitlist</p>
+                <h1 style="margin:0 0 16px;font-size:22px;font-weight:700;">New signup</h1>
+                <p style="margin:0 0 12px;line-height:1.7;color:#64748b;">
+                  Someone just joined the waitlist:
+                </p>
+                <p style="margin:0 0 16px;padding:12px 16px;background:#f8fafc;border-radius:8px;font-size:16px;font-weight:600;color:#0f172a;">
+                  ${email}
+                </p>
+                <p style="margin:0;font-size:14px;line-height:1.6;color:#94a3b8;">
+                  Joined at ${joinedAt}
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
+}
+
+export async function sendWaitlistAdminNotification(email: string): Promise<void> {
+  const joinedAt = new Date().toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+
+  await transporter.sendMail({
+    from: `"${config.mail.fromName}" <${config.smtp.from}>`,
+    to: config.mail.notifyTo,
+    replyTo: email,
+    subject: `New waitlist signup: ${email}`,
+    text: `Someone just joined the Kalpanik waitlist.\n\nEmail: ${email}\nJoined at: ${joinedAt}`,
+    html: buildAdminNotificationHtml(email, joinedAt),
+  });
+}
+
 export async function verifySmtpConnection(): Promise<void> {
   await transporter.verify();
 }
