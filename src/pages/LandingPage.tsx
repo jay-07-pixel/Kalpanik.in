@@ -33,14 +33,14 @@ export function LandingPage() {
     >
       <LivingScene />
       <CursorGlow />
-      <Logo />
+      <Logo onSecretClick={handleSecretUnlock} />
       <ModeTransition />
       <InteractionHint />
       <ImaginationCounter />
       <EasterEggToast />
 
       <main className="content-layer">
-        <ComingSoon onSecretBadgeClick={handleSecretUnlock} />
+        <ComingSoon />
       </main>
 
       <AdminLoginModal
