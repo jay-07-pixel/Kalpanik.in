@@ -31,8 +31,8 @@ export const config = {
   },
   mail: {
     fromName: optional("MAIL_FROM_NAME", "Kalpanik"),
-    replyTo: optional("MAIL_REPLY_TO", "kalpanik432@gmail.com"),
-    notifyTo: optional("ADMIN_NOTIFY_EMAIL", "kalpanik432@gmail.com"),
+    replyTo: optional("MAIL_REPLY_TO", "support@kalpanik.in"),
+    notifyTo: optional("ADMIN_NOTIFY_EMAIL", "support@kalpanik.in"),
   },
   admin: {
     email: required("ADMIN_EMAIL"),
