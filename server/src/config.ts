@@ -40,4 +40,18 @@ export const config = {
     jwtSecret: required("JWT_SECRET"),
     jwtExpiresIn: optional("JWT_EXPIRES_IN", "24h"),
   },
+  upi: {
+    id: required("KALPANIK_UPI_ID"),
+    name: optional("KALPANIK_UPI_NAME", "Kalpanik"),
+  },
+  activation: {
+    secret: required("KALPANIK_ACTIVATION_SECRET"),
+  },
+  invoice: {
+    legalName: optional("KALPANIK_LEGAL_NAME", "Kalpanik"),
+    address: optional("KALPANIK_ADDRESS", "India"),
+    gstin: optional("KALPANIK_GSTIN", ""),
+    email: optional("KALPANIK_INVOICE_EMAIL", "support@kalpanik.in"),
+    phone: optional("KALPANIK_INVOICE_PHONE", ""),
+  },
 } as const;

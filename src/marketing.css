@@ -1,0 +1,566 @@
+/* Kalpanik marketing + renew — teal/blue SaaS */
+
+.mkt-shell {
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse 90% 50% at 10% -10%, rgba(14, 165, 233, 0.16), transparent 50%),
+    radial-gradient(ellipse 70% 40% at 90% 0%, rgba(45, 212, 191, 0.12), transparent 45%),
+    linear-gradient(180deg, #f0f9ff 0%, #f8fafc 40%, #ffffff 100%);
+  color: #0f172a;
+  font-family: var(--font-body);
+}
+
+.mkt-nav {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem clamp(1rem, 4vw, 2.5rem);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(14, 165, 233, 0.12);
+}
+
+.mkt-nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border: none;
+  background: transparent;
+  cursor: default;
+  padding: 0;
+  text-align: left;
+}
+
+.mkt-nav-logo {
+  height: 3rem;
+  width: auto;
+}
+
+.mkt-nav-brand strong {
+  display: block;
+  font-family: var(--font-display);
+  letter-spacing: 0.08em;
+  font-size: 0.95rem;
+}
+
+.mkt-nav-brand em {
+  display: block;
+  font-style: normal;
+  font-size: 0.68rem;
+  color: #64748b;
+  max-width: 16rem;
+}
+
+.mkt-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.mkt-nav-links a {
+  color: #334155;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.mkt-nav-links a.active {
+  color: #0284c7;
+}
+
+.mkt-nav-cta {
+  padding: 0.55rem 0.95rem !important;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #0ea5e9, #14b8a6);
+  color: #fff !important;
+  box-shadow: 0 8px 24px rgba(14, 165, 233, 0.28);
+}
+
+.mkt-hero {
+  position: relative;
+  padding: clamp(3rem, 8vw, 5.5rem) clamp(1rem, 4vw, 2.5rem) 2.5rem;
+  text-align: center;
+  overflow: hidden;
+}
+
+.mkt-hero--compact {
+  padding-top: 2.5rem;
+  padding-bottom: 1.5rem;
+}
+
+.mkt-hero-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(120deg, rgba(14, 165, 233, 0.08), transparent 40%),
+    linear-gradient(300deg, rgba(20, 184, 166, 0.08), transparent 35%);
+  pointer-events: none;
+}
+
+.mkt-trial-badge {
+  position: relative;
+  display: inline-block;
+  margin: 0 0 1rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid rgba(14, 165, 233, 0.35);
+  background: rgba(14, 165, 233, 0.08);
+  color: #0369a1;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.mkt-hero h1 {
+  position: relative;
+  margin: 0 auto 1rem;
+  max-width: 18ch;
+  font-family: var(--font-display);
+  font-size: clamp(1.85rem, 5vw, 3.25rem);
+  line-height: 1.15;
+  letter-spacing: 0.02em;
+  color: #0c4a6e;
+}
+
+.mkt-hero-sub {
+  position: relative;
+  margin: 0 auto 1.5rem;
+  max-width: 40rem;
+  color: #475569;
+  font-size: clamp(1rem, 2.2vw, 1.15rem);
+  line-height: 1.65;
+}
+
+.mkt-hero-actions {
+  position: relative;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.mkt-renew-meta {
+  position: relative;
+  margin-top: 0.75rem;
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.mkt-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.2rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+}
+
+.mkt-btn--primary {
+  background: linear-gradient(135deg, #0ea5e9, #14b8a6);
+  color: #fff;
+  box-shadow: 0 10px 28px rgba(14, 165, 233, 0.3);
+}
+
+.mkt-btn--ghost {
+  background: #fff;
+  color: #0369a1;
+  border: 1px solid rgba(14, 165, 233, 0.25);
+}
+
+.mkt-section {
+  padding: 2.5rem clamp(1rem, 4vw, 2.5rem) 3rem;
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+.mkt-section--soft {
+  background: rgba(240, 249, 255, 0.7);
+  max-width: none;
+}
+
+.mkt-section-head {
+  text-align: center;
+  margin-bottom: 1.75rem;
+}
+
+.mkt-section-head h2 {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  color: #0c4a6e;
+}
+
+.mkt-section-head p {
+  margin: 0;
+  color: #64748b;
+}
+
+.mkt-pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  gap: 1.1rem;
+}
+
+.mkt-plan-card,
+.mkt-storage-card {
+  position: relative;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(14, 165, 233, 0.14);
+  border-radius: 1.25rem;
+  padding: 1.35rem 1.25rem 1.4rem;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.05);
+}
+
+.mkt-plan-card--featured {
+  border-color: rgba(20, 184, 166, 0.45);
+  box-shadow: 0 18px 48px rgba(14, 165, 233, 0.14);
+}
+
+.mkt-plan-badge {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #0f766e;
+  background: rgba(45, 212, 191, 0.18);
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+}
+
+.mkt-plan-card h3,
+.mkt-storage-card h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.15rem;
+  color: #0c4a6e;
+}
+
+.mkt-plan-price {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-display);
+  font-size: 2rem;
+  color: #0369a1;
+}
+
+.mkt-plan-price span {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-left: 0.25rem;
+}
+
+.mkt-plan-storage,
+.mkt-plan-tagline,
+.mkt-plan-includes {
+  color: #64748b;
+  font-size: 0.88rem;
+  margin: 0 0 0.65rem;
+}
+
+.mkt-plan-features {
+  list-style: none;
+  margin: 0 0 1.1rem;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.mkt-plan-features li {
+  position: relative;
+  padding-left: 1.1rem;
+  font-size: 0.84rem;
+  color: #334155;
+  line-height: 1.4;
+}
+
+.mkt-plan-features li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: #14b8a6;
+  font-weight: 700;
+}
+
+.mkt-trust {
+  list-style: none;
+  margin: 0 auto;
+  padding: 0;
+  max-width: 64rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.75rem;
+}
+
+.mkt-trust li {
+  text-align: center;
+  padding: 0.9rem 0.75rem;
+  border-radius: 0.9rem;
+  background: #fff;
+  border: 1px solid rgba(14, 165, 233, 0.12);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #0c4a6e;
+}
+
+.mkt-footer {
+  margin-top: 2rem;
+  padding: 2rem clamp(1rem, 4vw, 2.5rem);
+  border-top: 1px solid rgba(14, 165, 233, 0.12);
+  background: #0c4a6e;
+  color: #e0f2fe;
+}
+
+.mkt-footer-inner {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  max-width: 72rem;
+  margin: 0 auto 1rem;
+}
+
+.mkt-footer a {
+  color: #7dd3fc;
+  text-decoration: none;
+}
+
+.mkt-footer-links {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.mkt-footer-copy {
+  max-width: 72rem;
+  margin: 0 auto;
+  font-size: 0.8rem;
+  color: #7dd3fc;
+}
+
+/* Renew */
+.renew-section {
+  max-width: 68rem;
+}
+
+.renew-error {
+  background: rgba(248, 113, 113, 0.12);
+  color: #b91c1c;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.renew-form {
+  display: grid;
+  grid-template-columns: 1.4fr 0.9fr;
+  gap: 1.25rem;
+}
+
+.renew-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+  background: #fff;
+  border: 1px solid rgba(14, 165, 233, 0.14);
+  border-radius: 1rem;
+  padding: 1.1rem;
+}
+
+.renew-grid label,
+.renew-proof-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.renew-full {
+  grid-column: 1 / -1;
+}
+
+.renew-grid input,
+.renew-grid select,
+.renew-grid textarea,
+.renew-proof-form input {
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.6rem;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  font-size: 0.95rem;
+  color: #0f172a;
+  background: #f8fafc;
+}
+
+.renew-summary,
+.renew-upi,
+.renew-done {
+  background: #fff;
+  border: 1px solid rgba(14, 165, 233, 0.14);
+  border-radius: 1rem;
+  padding: 1.2rem;
+  height: fit-content;
+}
+
+.renew-total {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #0369a1;
+}
+
+.renew-pay-layout {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 1.25rem;
+}
+
+.renew-invoice {
+  background: #fff;
+  border: 1px solid rgba(14, 165, 233, 0.14);
+  border-radius: 1rem;
+  padding: 1.4rem;
+}
+
+.renew-invoice-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+}
+
+.renew-invoice-logo {
+  height: 2.2rem;
+  width: auto;
+  margin-bottom: 0.5rem;
+}
+
+.renew-invoice-meta {
+  text-align: right;
+}
+
+.renew-invoice-parties {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.renew-invoice-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  margin-bottom: 1rem;
+}
+
+.renew-invoice-table th,
+.renew-invoice-table td {
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0.55rem 0.35rem;
+  text-align: left;
+}
+
+.renew-invoice-total {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #0c4a6e;
+}
+
+.renew-qr {
+  width: 220px;
+  height: 220px;
+  display: block;
+  margin: 0.75rem auto;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+}
+
+.renew-upi-amount {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #0369a1;
+  margin: 0.25rem 0;
+  text-align: center;
+}
+
+.renew-upi-id {
+  text-align: center;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.renew-upi-hint {
+  font-size: 0.82rem;
+  color: #64748b;
+  margin: 0.75rem 0;
+}
+
+.renew-proof-form {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.admin-renewals {
+  margin-top: 2rem;
+}
+
+.admin-renewals-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.admin-renewals-table th,
+.admin-renewals-table td {
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  padding: 0.65rem 0.4rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.admin-renewals-table .muted {
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+@media (max-width: 900px) {
+  .renew-form,
+  .renew-pay-layout,
+  .renew-grid,
+  .renew-invoice-parties {
+    grid-template-columns: 1fr;
+  }
+
+  .mkt-nav-brand em {
+    display: none;
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .mkt-shell {
+    background: #fff;
+  }
+
+  .renew-invoice {
+    border: none;
+    box-shadow: none;
+  }
+}

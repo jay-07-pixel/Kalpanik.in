@@ -3,9 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { KpiCard } from "../components/admin/KpiCard";
 import { BarChart } from "../components/admin/BarChart";
 import { TrendChart } from "../components/admin/TrendChart";
+import { AdminRenewalsPanel } from "../components/admin/AdminRenewalsPanel";
 import { useAdminAuth } from "../context/AdminAuthContext";
 import { adminApi } from "../constants/admin";
 import "../admin.css";
+import "../marketing.css";
 
 interface DashboardData {
   visitors: {
@@ -127,6 +129,8 @@ export function AdminDashboard() {
       )}
 
       {error && <p className="admin-error-banner">{error}</p>}
+
+      {token && <AdminRenewalsPanel token={token} />}
 
       {stats && (
         <>
