@@ -42,16 +42,23 @@ export const config = {
   },
   upi: {
     id: required("KALPANIK_UPI_ID"),
-    name: optional("KALPANIK_UPI_NAME", "Kalpanik"),
+    name: optional("KALPANIK_UPI_NAME", "SHREE S2N SOLUTIONS"),
   },
   activation: {
     secret: required("KALPANIK_ACTIVATION_SECRET"),
   },
   invoice: {
-    legalName: optional("KALPANIK_LEGAL_NAME", "Kalpanik"),
-    address: optional("KALPANIK_ADDRESS", "India"),
+    legalName: optional("KALPANIK_LEGAL_NAME", "SHREE S2N SOLUTIONS"),
+    brandName: optional("KALPANIK_BRAND_NAME", "Kalpanik"),
+    address: optional("KALPANIK_ADDRESS", "ANANDAM WORLD CITY"),
     gstin: optional("KALPANIK_GSTIN", ""),
     email: optional("KALPANIK_INVOICE_EMAIL", "support@kalpanik.in"),
     phone: optional("KALPANIK_INVOICE_PHONE", ""),
+    bankName: optional("KALPANIK_BANK_NAME", "HDFC Bank"),
+    bankBranch: optional("KALPANIK_BANK_BRANCH", "ANANDAM WORLD CITY"),
+    accountName: optional("KALPANIK_ACCOUNT_NAME", "SHREE S2N SOLUTIONS"),
+    accountNumber: optional("KALPANIK_ACCOUNT_NUMBER", ""),
+    accountType: optional("KALPANIK_ACCOUNT_TYPE", "Current Account"),
+    ifsc: optional("KALPANIK_IFSC", "HDFC0006825"),
   },
 } as const;

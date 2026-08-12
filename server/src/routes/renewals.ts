@@ -196,12 +196,15 @@ renewalsRouter.post("/:invoiceNo/proof", createLimiter, (req, res) => {
 });
 
 function buildUpiUri(pa: string, pn: string, amount: number, invoiceNo: string): string {
+  // Correct scheme: upi://pay?pa=...&pn=...&am=...&cu=INR&tn=...&tr=...
+  // (NOT upi://? — that form fails in many UPI apps)
   const params = new URLSearchParams({
-    pa,
-    pn,
+    pa: pa.trim(),
+    pn: pn.trim(),
     am: amount.toFixed(2),
     cu: "INR",
     tn: invoiceNo,
+    tr: invoiceNo,
   });
   return `upi://pay?${params.toString()}`;
 }

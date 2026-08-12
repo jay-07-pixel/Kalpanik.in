@@ -4,7 +4,6 @@ import QRCode from "qrcode";
 import { SiteNav } from "../components/marketing/SiteNav";
 import { SiteFooter } from "../components/marketing/PricingCards";
 import {
-  BRAND,
   EXTRA_STORAGE_PRICE_PER_GB,
   PLANS,
   calcAmountInr,
@@ -37,10 +36,17 @@ interface RenewalData {
 
 interface InvoiceCompany {
   legalName: string;
+  brandName?: string;
   address: string;
   gstin: string;
   email: string;
   phone: string;
+  bankName?: string;
+  bankBranch?: string;
+  accountName?: string;
+  accountNumber?: string;
+  accountType?: string;
+  ifsc?: string;
 }
 
 function renewalsApi(path: string) {
@@ -300,10 +306,14 @@ export function RenewPage() {
               <header className="renew-invoice-head">
                 <div>
                   <img src="/kalpanik-wordmark.png?v=3" alt="Kalpanik" className="renew-invoice-logo" />
-                  <p>{invoiceCompany?.legalName ?? BRAND.name}</p>
+                  <p>
+                    <strong>{invoiceCompany?.legalName ?? "SHREE S2N SOLUTIONS"}</strong>
+                  </p>
+                  {invoiceCompany?.brandName && <p>Brand: {invoiceCompany.brandName}</p>}
                   <p>{invoiceCompany?.address}</p>
                   {invoiceCompany?.gstin && <p>GSTIN: {invoiceCompany.gstin}</p>}
                   <p>{invoiceCompany?.email}</p>
+                  {invoiceCompany?.phone && <p>{invoiceCompany.phone}</p>}
                 </div>
                 <div className="renew-invoice-meta">
                   <h2>TAX INVOICE</h2>
@@ -382,6 +392,33 @@ export function RenewPage() {
               <p className="renew-invoice-total">
                 Total payable: ₹{renewal.amountInr.toLocaleString("en-IN")}
               </p>
+
+              {(invoiceCompany?.accountNumber || invoiceCompany?.ifsc) && (
+                <div className="renew-bank-box">
+                  <h4>Bank transfer details</h4>
+                  <p>
+                    <strong>Account name:</strong> {invoiceCompany?.accountName}
+                  </p>
+                  <p>
+                    <strong>Bank:</strong> {invoiceCompany?.bankName}
+                    {invoiceCompany?.bankBranch ? ` — ${invoiceCompany.bankBranch}` : ""}
+                  </p>
+                  <p>
+                    <strong>Account type:</strong> {invoiceCompany?.accountType}
+                  </p>
+                  <p>
+                    <strong>Account number:</strong> {invoiceCompany?.accountNumber}
+                  </p>
+                  <p>
+                    <strong>IFSC:</strong> {invoiceCompany?.ifsc}
+                  </p>
+                  <p className="muted">
+                    Prefer UPI QR on the right for faster payment. Use bank transfer if needed,
+                    then submit UTR below.
+                  </p>
+                </div>
+              )}
+
               <button type="button" className="mkt-btn mkt-btn--ghost no-print" onClick={printInvoice}>
                 Print / Save PDF
               </button>
