@@ -13,6 +13,9 @@ import { errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
 
+// Behind Nginx — required for express-rate-limit + X-Forwarded-For
+app.set("trust proxy", 1);
+
 app.use(
   helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" },
