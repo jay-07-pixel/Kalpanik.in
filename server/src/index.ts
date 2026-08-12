@@ -43,10 +43,14 @@ app.use(errorHandler);
 
 async function start() {
   await verifyDatabaseConnection();
-  await verifySmtpConnection();
+  try {
+    await verifySmtpConnection();
+  } catch (error) {
+    console.warn("[smtp] Verify failed — API will still start. Emails may fail until SMTP is fixed:", error);
+  }
 
-  app.listen(config.port, () => {
-    console.log(`Kalpanik API listening on http://localhost:${config.port}`);
+  app.listen(config.port, "127.0.0.1", () => {
+    console.log(`Kalpanik API listening on http://127.0.0.1:${config.port}`);
   });
 }
 

@@ -1,4 +1,21 @@
-import "dotenv/config";
+import dotenv from "dotenv";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const here = path.dirname(fileURLToPath(import.meta.url));
+const envCandidates = [
+  path.resolve(process.cwd(), ".env"),
+  path.resolve(here, "../.env"), // dist-server/.env sibling → project root
+  path.resolve(here, "../../.env"), // server/src → project root
+];
+
+for (const envPath of envCandidates) {
+  if (fs.existsSync(envPath)) {
+    dotenv.config({ path: envPath });
+    break;
+  }
+}
 
 function required(name: string): string {
   const value = process.env[name]?.trim();
