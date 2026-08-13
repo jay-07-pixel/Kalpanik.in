@@ -240,11 +240,40 @@
   border-radius: 999px;
 }
 
+.mkt-offer-badge {
+  display: inline-block;
+  margin-bottom: 0.55rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #9a3412;
+  background: rgba(251, 146, 60, 0.22);
+  padding: 0.28rem 0.55rem;
+  border-radius: 0.4rem;
+}
+
 .mkt-plan-card h3,
 .mkt-storage-card h3 {
   margin: 0 0 0.5rem;
   font-size: 1.15rem;
   color: #0c4a6e;
+}
+
+.mkt-plan-list-price {
+  margin: 0 0 0.15rem;
+  font-size: 0.95rem;
+  color: #94a3b8;
+}
+
+.mkt-plan-list-price s {
+  color: #64748b;
+  margin-right: 0.35rem;
+}
+
+.mkt-plan-list-price span {
+  font-size: 0.78rem;
+  color: #94a3b8;
 }
 
 .mkt-plan-price {
@@ -259,6 +288,13 @@
   font-size: 0.85rem;
   color: #64748b;
   margin-left: 0.25rem;
+}
+
+.mkt-offer-note {
+  margin: 0 0 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #c2410c;
 }
 
 .mkt-plan-storage,
@@ -465,6 +501,10 @@
   background: #fafafa;
 }
 
+.tax-discount-row td {
+  color: #c2410c;
+}
+
 .tax-words {
   margin: 0;
   padding: 0.55rem 0.75rem;
@@ -627,6 +667,21 @@
   font-size: 1.35rem;
   font-weight: 700;
   color: #0369a1;
+}
+
+.renew-offer-banner {
+  margin: 0 0 0.75rem;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #9a3412;
+  background: rgba(251, 146, 60, 0.16);
+  border-radius: 0.5rem;
+}
+
+.renew-discount {
+  color: #c2410c;
+  font-weight: 600;
 }
 
 .renew-pay-layout {

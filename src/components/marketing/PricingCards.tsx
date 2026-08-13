@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
 import {
   BRAND,
+  EXTRA_STORAGE_LIST_PRICE_PER_GB,
   EXTRA_STORAGE_PRICE_PER_GB,
   PLANS,
+  SPECIAL_DISCOUNT_PERCENT,
   TRUST_POINTS,
   type PlanId,
   storageIncludedGb,
@@ -26,12 +28,18 @@ export function PricingCards({
         const featured = id === highlight;
         return (
           <article key={id} className={`mkt-plan-card${featured ? " mkt-plan-card--featured" : ""}`}>
+            <span className="mkt-offer-badge">{SPECIAL_DISCOUNT_PERCENT}% OFF</span>
             {featured && <span className="mkt-plan-badge">Most Popular</span>}
             <h3>{plan.name}</h3>
+            <p className="mkt-plan-list-price">
+              <s>₹{plan.listPricePerUser}</s>
+              <span>/ user / month</span>
+            </p>
             <p className="mkt-plan-price">
               ₹{plan.pricePerUser}
               <span>/ user / month</span>
             </p>
+            <p className="mkt-offer-note">{BRAND.specialOffer}</p>
             <p className="mkt-plan-storage">1 GB per user · e.g. 5 users = {storageIncludedGb(5)} GB</p>
             <p className="mkt-plan-tagline">{plan.tagline}</p>
             {plan.includesPrevious && (
@@ -42,10 +50,7 @@ export function PricingCards({
                 <li key={f}>{f}</li>
               ))}
             </ul>
-            <Link
-              className="mkt-btn mkt-btn--primary"
-              to={`${ctaTo}?plan=${id}`}
-            >
+            <Link className="mkt-btn mkt-btn--primary" to={`${ctaTo}?plan=${id}`}>
               {ctaLabel}
             </Link>
           </article>
@@ -53,11 +58,17 @@ export function PricingCards({
       })}
 
       <aside className="mkt-storage-card">
+        <span className="mkt-offer-badge">{SPECIAL_DISCOUNT_PERCENT}% OFF</span>
         <h3>Extra Storage</h3>
+        <p className="mkt-plan-list-price">
+          <s>₹{EXTRA_STORAGE_LIST_PRICE_PER_GB}</s>
+          <span>/ GB / month</span>
+        </p>
         <p className="mkt-plan-price">
           ₹{EXTRA_STORAGE_PRICE_PER_GB}
           <span>/ GB / month</span>
         </p>
+        <p className="mkt-offer-note">Special price for lucky customers</p>
         <p>
           Used for chats, proof submissions, media & voice notes. Cancel anytime.
           When storage is full, new uploads are blocked until you delete files or buy more.

@@ -181,15 +181,15 @@ export function TaxInvoice({
         </thead>
         <tbody>
           {lines.map((line, i) => (
-            <tr key={line.particulars}>
+            <tr key={`${line.particulars}-${i}`} className={line.amount < 0 ? "tax-discount-row" : undefined}>
               <td>{i + 1}</td>
               <td>
                 <strong>{line.particulars}</strong>
               </td>
-              <td>{line.hsn}</td>
-              <td className="num">{line.qty}</td>
-              <td>{line.unit}</td>
-              <td className="num">{fmt(line.rate)}</td>
+              <td>{line.hsn || ""}</td>
+              <td className="num">{line.qty > 0 ? line.qty : ""}</td>
+              <td>{line.unit || ""}</td>
+              <td className="num">{line.rate !== 0 ? fmt(line.rate) : ""}</td>
               <td className="num">{fmt(line.amount)}</td>
             </tr>
           ))}
@@ -222,7 +222,7 @@ export function TaxInvoice({
             </td>
             <td />
             <td className="num">
-              <strong>{lines.reduce((s, l) => s + l.qty, 0)}</strong>
+              <strong>{lines.reduce((s, l) => s + (l.qty > 0 ? l.qty : 0), 0)}</strong>
             </td>
             <td />
             <td />

@@ -40,7 +40,7 @@ export function MarketingHome() {
       <section className="mkt-section">
         <div className="mkt-section-head">
           <h2>Choose Your Plan</h2>
-          <p>Transparent per-user pricing with included storage and optional extras.</p>
+          <p>{BRAND.specialOffer} — limited celebration pricing on every plan.</p>
         </div>
         <PricingCards />
       </section>

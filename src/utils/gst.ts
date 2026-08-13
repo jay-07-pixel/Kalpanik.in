@@ -1,6 +1,8 @@
 import {
+  EXTRA_STORAGE_LIST_PRICE_PER_GB,
   EXTRA_STORAGE_PRICE_PER_GB,
   PLANS,
+  SPECIAL_DISCOUNT_PERCENT,
   type PlanId,
 } from "../constants/pricing";
 
@@ -25,6 +27,18 @@ export function calcTaxableInr(
   return PLANS[plan].pricePerUser * u * m + g * EXTRA_STORAGE_PRICE_PER_GB * m;
 }
 
+export function calcListInr(
+  plan: PlanId,
+  users: number,
+  months: number,
+  extraGb: number
+): number {
+  const u = Math.max(1, Math.floor(users));
+  const m = Math.max(1, Math.floor(months));
+  const g = Math.max(0, Math.floor(extraGb));
+  return PLANS[plan].listPricePerUser * u * m + g * EXTRA_STORAGE_LIST_PRICE_PER_GB * m;
+}
+
 export function calcGstBreakdown(taxable: number) {
   const cgst = round2(taxable * CGST_RATE);
   const sgst = round2(taxable * SGST_RATE);
@@ -37,24 +51,49 @@ export function buildInvoiceLines(plan: PlanId, users: number, months: number, e
   const u = Math.max(1, Math.floor(users));
   const m = Math.max(1, Math.floor(months));
   const g = Math.max(0, Math.floor(extraGb));
-  const planLine = {
-    particulars: `Kalpanik ${PLANS[plan].name} Subscription (${m} month${m > 1 ? "s" : ""})`,
-    hsn: DEFAULT_SAC,
-    qty: u,
-    unit: "User",
-    rate: PLANS[plan].pricePerUser * m,
-    amount: PLANS[plan].pricePerUser * u * m,
-  };
-  const lines = [planLine];
+  const listPlan = PLANS[plan].listPricePerUser * u * m;
+  const netPlan = PLANS[plan].pricePerUser * u * m;
+  const planDiscount = listPlan - netPlan;
+
+  const lines = [
+    {
+      particulars: `Kalpanik ${PLANS[plan].name} Subscription (${m} month${m > 1 ? "s" : ""})`,
+      hsn: DEFAULT_SAC,
+      qty: u,
+      unit: "User",
+      rate: PLANS[plan].listPricePerUser * m,
+      amount: listPlan,
+    },
+    {
+      particulars: `Less: Special Customer Discount ${SPECIAL_DISCOUNT_PERCENT}% (Lucky customer offer)`,
+      hsn: "",
+      qty: 0,
+      unit: "",
+      rate: 0,
+      amount: -planDiscount,
+    },
+  ];
+
   if (g > 0) {
+    const listStorage = EXTRA_STORAGE_LIST_PRICE_PER_GB * g * m;
+    const netStorage = EXTRA_STORAGE_PRICE_PER_GB * g * m;
     lines.push({
       particulars: `Extra Storage (${m} month${m > 1 ? "s" : ""})`,
       hsn: DEFAULT_SAC,
       qty: g,
       unit: "GB",
-      rate: EXTRA_STORAGE_PRICE_PER_GB * m,
-      amount: EXTRA_STORAGE_PRICE_PER_GB * g * m,
+      rate: EXTRA_STORAGE_LIST_PRICE_PER_GB * m,
+      amount: listStorage,
+    });
+    lines.push({
+      particulars: `Less: Storage Special Discount ${SPECIAL_DISCOUNT_PERCENT}%`,
+      hsn: "",
+      qty: 0,
+      unit: "",
+      rate: 0,
+      amount: -(listStorage - netStorage),
     });
   }
+
   return lines;
 }

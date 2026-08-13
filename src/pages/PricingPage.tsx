@@ -22,7 +22,7 @@ export function PricingPage() {
         <div className="mkt-hero-bg" />
         <p className="mkt-trial-badge">{BRAND.trialBadge}</p>
         <h1>Pricing</h1>
-        <p className="mkt-hero-sub">{BRAND.hero}</p>
+        <p className="mkt-hero-sub">{BRAND.specialOffer}</p>
       </section>
       <section className="mkt-section">
         <PricingCards ctaLabel="Continue to Renew" />

@@ -5,13 +5,16 @@ import { SiteNav } from "../components/marketing/SiteNav";
 import { SiteFooter } from "../components/marketing/PricingCards";
 import { TaxInvoice } from "../components/renew/TaxInvoice";
 import {
+  BRAND,
+  EXTRA_STORAGE_LIST_PRICE_PER_GB,
   EXTRA_STORAGE_PRICE_PER_GB,
   PLANS,
+  SPECIAL_DISCOUNT_PERCENT,
   isPlanId,
   storageIncludedGb,
   type PlanId,
 } from "../constants/pricing";
-import { buildInvoiceLines, calcGstBreakdown, calcTaxableInr } from "../utils/gst";
+import { buildInvoiceLines, calcGstBreakdown, calcListInr, calcTaxableInr } from "../utils/gst";
 import { API_BASE } from "../constants/admin";
 import "../marketing.css";
 
@@ -98,7 +101,12 @@ export function RenewPage() {
     () => calcTaxableInr(plan, users, months, extraGb),
     [plan, users, months, extraGb]
   );
+  const listTotal = useMemo(
+    () => calcListInr(plan, users, months, extraGb),
+    [plan, users, months, extraGb]
+  );
   const gst = useMemo(() => calcGstBreakdown(taxable), [taxable]);
+  const discountInr = listTotal - taxable;
 
   useEffect(() => {
     fetch(renewalsApi("/config"))
@@ -286,10 +294,12 @@ export function RenewPage() {
                 Plan
                 <select value={plan} onChange={(e) => setPlan(e.target.value as PlanId)}>
                   <option value="task_management">
-                    Task Management — ₹{PLANS.task_management.pricePerUser}/user/mo
+                    Task Management — ₹{PLANS.task_management.pricePerUser}/user/mo (
+                    {SPECIAL_DISCOUNT_PERCENT}% off)
                   </option>
                   <option value="task_attendance">
-                    Task + Attendance — ₹{PLANS.task_attendance.pricePerUser}/user/mo
+                    Task + Attendance — ₹{PLANS.task_attendance.pricePerUser}/user/mo (
+                    {SPECIAL_DISCOUNT_PERCENT}% off)
                   </option>
                 </select>
               </label>
@@ -325,15 +335,25 @@ export function RenewPage() {
 
             <aside className="renew-summary">
               <h3>Bill summary</h3>
+              <p className="renew-offer-banner">{BRAND.specialOffer}</p>
               <p>
-                {PLANS[plan].name}: ₹{PLANS[plan].pricePerUser} × {users} users × {months} mo
+                {PLANS[plan].name}: <s>₹{PLANS[plan].listPricePerUser}</s> ₹
+                {PLANS[plan].pricePerUser} × {users} users × {months} mo
               </p>
               <p>Included storage: {storageIncludedGb(users)} GB</p>
               {extraGb > 0 && (
                 <p>
-                  Extra storage: ₹{EXTRA_STORAGE_PRICE_PER_GB} × {extraGb} GB × {months} mo
+                  Extra storage: <s>₹{EXTRA_STORAGE_LIST_PRICE_PER_GB}</s> ₹
+                  {EXTRA_STORAGE_PRICE_PER_GB} × {extraGb} GB × {months} mo
                 </p>
               )}
+              <p>
+                List total: <s>₹{listTotal.toLocaleString("en-IN")}</s>
+              </p>
+              <p className="renew-discount">
+                Special discount ({SPECIAL_DISCOUNT_PERCENT}%): −₹
+                {discountInr.toLocaleString("en-IN")}
+              </p>
               <p>Taxable: ₹{gst.taxable.toLocaleString("en-IN")}</p>
               <p>CGST 9%: ₹{gst.cgst.toLocaleString("en-IN")}</p>
               <p>SGST 9%: ₹{gst.sgst.toLocaleString("en-IN")}</p>
@@ -379,7 +399,7 @@ export function RenewPage() {
               gst={calcGstBreakdown(
                 calcTaxableInr(renewal.plan, renewal.users, renewal.months, renewal.extraGb)
               )}
-              remarks={`Kalpanik subscription renewal. Invoice ${renewal.invoiceNo}. Pay via UPI/Bank and submit UTR.`}
+              remarks={`${BRAND.specialOffer}. Invoice ${renewal.invoiceNo}. Pay via UPI/Bank and submit UTR.`}
               onPrint={printInvoice}
             />
 

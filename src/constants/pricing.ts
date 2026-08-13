@@ -5,7 +5,10 @@ export type PlanId = "task_management" | "task_attendance";
 export interface PlanDefinition {
   id: PlanId;
   name: string;
+  /** Actual charge per user / month (after special discount). */
   pricePerUser: number;
+  /** Display MRP before 50% special discount (= 2× pricePerUser). */
+  listPricePerUser: number;
   storageGbPerUser: number;
   tagline: string;
   features: string[];
@@ -17,17 +20,21 @@ export const BRAND = {
   tagline: "Manage Tasks. Track Work. Grow Together.",
   hero: "Powerful Work Management. Choose Your Plan.",
   trialBadge: "30-DAY FREE TRIAL · Up to 5 Employees",
+  specialOffer: "50% OFF — Special offer for our lucky customers",
   supportEmail: "support@kalpanik.in",
   website: "https://kalpanik.in",
 } as const;
 
+export const SPECIAL_DISCOUNT_PERCENT = 50;
 export const EXTRA_STORAGE_PRICE_PER_GB = 100;
+export const EXTRA_STORAGE_LIST_PRICE_PER_GB = 200;
 
 export const PLANS: Record<PlanId, PlanDefinition> = {
   task_management: {
     id: "task_management",
     name: "Task Management",
     pricePerUser: 299,
+    listPricePerUser: 598,
     storageGbPerUser: 1,
     tagline: "Complete task & team collaboration suite",
     features: [
@@ -53,6 +60,7 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     id: "task_attendance",
     name: "Task + Attendance",
     pricePerUser: 349,
+    listPricePerUser: 698,
     storageGbPerUser: 1,
     tagline: "Everything in Task Management + field & attendance",
     includesPrevious: true,
