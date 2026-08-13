@@ -104,6 +104,7 @@ export function calcAmountInr(
   const u = Math.max(1, Math.floor(users));
   const m = Math.max(1, Math.floor(months));
   const g = Math.max(0, Math.floor(extraGb));
+  /** Taxable subscription amount (GST added at invoice / payment). */
   return planPrice * u * m + g * EXTRA_STORAGE_PRICE_PER_GB * m;
 }
 

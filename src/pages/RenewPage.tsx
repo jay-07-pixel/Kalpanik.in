@@ -3,14 +3,15 @@ import { useSearchParams } from "react-router-dom";
 import QRCode from "qrcode";
 import { SiteNav } from "../components/marketing/SiteNav";
 import { SiteFooter } from "../components/marketing/PricingCards";
+import { TaxInvoice } from "../components/renew/TaxInvoice";
 import {
   EXTRA_STORAGE_PRICE_PER_GB,
   PLANS,
-  calcAmountInr,
   isPlanId,
   storageIncludedGb,
   type PlanId,
 } from "../constants/pricing";
+import { buildInvoiceLines, calcGstBreakdown, calcTaxableInr } from "../utils/gst";
 import { API_BASE } from "../constants/admin";
 import "../marketing.css";
 
@@ -30,6 +31,9 @@ interface RenewalData {
   trialEndExtendTo: string | null;
   billingAddress: string | null;
   gstin: string | null;
+  contactPerson?: string | null;
+  buyerState?: string | null;
+  buyerStateCode?: string | null;
   status: string;
   utr: string | null;
 }
@@ -41,6 +45,10 @@ interface InvoiceCompany {
   gstin: string;
   email: string;
   phone: string;
+  stateName?: string;
+  stateCode?: string;
+  udyam?: string;
+  jurisdiction?: string;
   bankName?: string;
   bankBranch?: string;
   accountName?: string;
@@ -59,6 +67,7 @@ export function RenewPage() {
   const [company, setCompany] = useState(params.get("company") ?? "");
   const [email, setEmail] = useState(params.get("email") ?? "");
   const [phone, setPhone] = useState(params.get("phone") ?? "");
+  const [contactPerson, setContactPerson] = useState(params.get("contact") ?? "");
   const [users, setUsers] = useState(Number(params.get("users")) || 5);
   const [months, setMonths] = useState(Number(params.get("months")) || 1);
   const [extraGb, setExtraGb] = useState(Number(params.get("extraGb")) || 0);
@@ -67,6 +76,8 @@ export function RenewPage() {
   );
   const [billingAddress, setBillingAddress] = useState("");
   const [gstin, setGstin] = useState("");
+  const [buyerState, setBuyerState] = useState("");
+  const [buyerStateCode, setBuyerStateCode] = useState("");
   const [trialEnd] = useState(params.get("trialEnd") ?? "");
   const [instance] = useState(params.get("instance") ?? "");
   const [site] = useState(params.get("site") ?? "");
@@ -83,10 +94,11 @@ export function RenewPage() {
   const [utr, setUtr] = useState("");
   const [screenshot, setScreenshot] = useState<File | null>(null);
 
-  const amount = useMemo(
-    () => calcAmountInr(plan, users, months, extraGb),
+  const taxable = useMemo(
+    () => calcTaxableInr(plan, users, months, extraGb),
     [plan, users, months, extraGb]
   );
+  const gst = useMemo(() => calcGstBreakdown(taxable), [taxable]);
 
   useEffect(() => {
     fetch(renewalsApi("/config"))
@@ -119,12 +131,15 @@ export function RenewPage() {
           company,
           email,
           phone,
+          contactPerson,
           users,
           months,
           extraGb,
           plan,
           billingAddress,
           gstin,
+          buyerState,
+          buyerStateCode,
           trialEnd: trialEnd || undefined,
           instance: instance || undefined,
           site: site || undefined,
@@ -177,6 +192,15 @@ export function RenewPage() {
 
   const printInvoice = () => window.print();
 
+  const seller: InvoiceCompany = invoiceCompany ?? {
+    legalName: "SHREE S2N SOLUTIONS",
+    brandName: "Kalpanik",
+    address: "ANANDAM WORLD CITY",
+    gstin: "",
+    email: "support@kalpanik.in",
+    phone: "",
+  };
+
   return (
     <div className="mkt-shell">
       <div className="no-print">
@@ -187,7 +211,7 @@ export function RenewPage() {
         <div className="mkt-hero-bg" />
         <h1>Renew Subscription</h1>
         <p className="mkt-hero-sub">
-          Generate your Kalpanik invoice, pay via UPI QR, and submit UTR for activation.
+          Generate a tax invoice, pay via UPI QR / bank transfer, and submit UTR for activation.
         </p>
         {instance && (
           <p className="mkt-renew-meta">
@@ -211,6 +235,10 @@ export function RenewPage() {
               <label>
                 Company
                 <input value={company} onChange={(e) => setCompany(e.target.value)} required />
+              </label>
+              <label>
+                Contact person
+                <input value={contactPerson} onChange={(e) => setContactPerson(e.target.value)} />
               </label>
               <label>
                 Email
@@ -266,8 +294,24 @@ export function RenewPage() {
                 </select>
               </label>
               <label>
-                GSTIN (optional)
+                Buyer GSTIN (optional)
                 <input value={gstin} onChange={(e) => setGstin(e.target.value)} />
+              </label>
+              <label>
+                State name
+                <input
+                  value={buyerState}
+                  onChange={(e) => setBuyerState(e.target.value)}
+                  placeholder="e.g. Maharashtra"
+                />
+              </label>
+              <label>
+                State code
+                <input
+                  value={buyerStateCode}
+                  onChange={(e) => setBuyerStateCode(e.target.value)}
+                  placeholder="e.g. 27"
+                />
               </label>
               <label className="renew-full">
                 Billing address
@@ -284,17 +328,20 @@ export function RenewPage() {
               <p>
                 {PLANS[plan].name}: ₹{PLANS[plan].pricePerUser} × {users} users × {months} mo
               </p>
-              <p>
-                Included storage: {storageIncludedGb(users)} GB
-              </p>
+              <p>Included storage: {storageIncludedGb(users)} GB</p>
               {extraGb > 0 && (
                 <p>
                   Extra storage: ₹{EXTRA_STORAGE_PRICE_PER_GB} × {extraGb} GB × {months} mo
                 </p>
               )}
-              <p className="renew-total">Total: ₹{amount.toLocaleString("en-IN")}</p>
+              <p>Taxable: ₹{gst.taxable.toLocaleString("en-IN")}</p>
+              <p>CGST 9%: ₹{gst.cgst.toLocaleString("en-IN")}</p>
+              <p>SGST 9%: ₹{gst.sgst.toLocaleString("en-IN")}</p>
+              <p className="renew-total">
+                Grand total: ₹{gst.grandTotal.toLocaleString("en-IN")}
+              </p>
               <button className="mkt-btn mkt-btn--primary" type="submit" disabled={loading}>
-                {loading ? "Creating invoice…" : "Generate Invoice & Pay"}
+                {loading ? "Creating invoice…" : "Generate Tax Invoice & Pay"}
               </button>
             </aside>
           </form>
@@ -302,133 +349,45 @@ export function RenewPage() {
 
         {(step === "pay" || step === "done") && renewal && (
           <div className="renew-pay-layout">
-            <article className="renew-invoice" id="invoice-print">
-              <header className="renew-invoice-head">
-                <div>
-                  <img src="/kalpanik-wordmark.png?v=3" alt="Kalpanik" className="renew-invoice-logo" />
-                  <p>
-                    <strong>{invoiceCompany?.legalName ?? "SHREE S2N SOLUTIONS"}</strong>
-                  </p>
-                  {invoiceCompany?.brandName && <p>Brand: {invoiceCompany.brandName}</p>}
-                  <p>{invoiceCompany?.address}</p>
-                  {invoiceCompany?.gstin && <p>GSTIN: {invoiceCompany.gstin}</p>}
-                  <p>{invoiceCompany?.email}</p>
-                  {invoiceCompany?.phone && <p>{invoiceCompany.phone}</p>}
-                </div>
-                <div className="renew-invoice-meta">
-                  <h2>TAX INVOICE</h2>
-                  <p>
-                    <strong>{renewal.invoiceNo}</strong>
-                  </p>
-                  <p>{new Date().toLocaleDateString("en-IN")}</p>
-                </div>
-              </header>
-
-              <div className="renew-invoice-parties">
-                <div>
-                  <h4>Bill To</h4>
-                  <p>
-                    <strong>{renewal.company}</strong>
-                  </p>
-                  <p>{renewal.email}</p>
-                  {renewal.phone && <p>{renewal.phone}</p>}
-                  {renewal.billingAddress && <p>{renewal.billingAddress}</p>}
-                  {renewal.gstin && <p>GSTIN: {renewal.gstin}</p>}
-                </div>
-                <div>
-                  <h4>Reference</h4>
-                  {renewal.instance && <p>Instance: {renewal.instance}</p>}
-                  {renewal.site && <p>Site: {renewal.site}</p>}
-                  {renewal.trialEnd && <p>Current trial end: {renewal.trialEnd}</p>}
-                  {renewal.trialEndExtendTo && (
-                    <p>Extend to: {renewal.trialEndExtendTo}</p>
-                  )}
-                </div>
-              </div>
-
-              <table className="renew-invoice-table">
-                <thead>
-                  <tr>
-                    <th>Description</th>
-                    <th>Qty</th>
-                    <th>Rate</th>
-                    <th>Amount</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>
-                      {PLANS[renewal.plan].name} ({renewal.months} month
-                      {renewal.months > 1 ? "s" : ""})
-                    </td>
-                    <td>{renewal.users}</td>
-                    <td>₹{PLANS[renewal.plan].pricePerUser}</td>
-                    <td>
-                      ₹
-                      {(
-                        PLANS[renewal.plan].pricePerUser *
-                        renewal.users *
-                        renewal.months
-                      ).toLocaleString("en-IN")}
-                    </td>
-                  </tr>
-                  {renewal.extraGb > 0 && (
-                    <tr>
-                      <td>Extra storage ({renewal.months} month{renewal.months > 1 ? "s" : ""})</td>
-                      <td>{renewal.extraGb} GB</td>
-                      <td>₹{EXTRA_STORAGE_PRICE_PER_GB}</td>
-                      <td>
-                        ₹
-                        {(
-                          renewal.extraGb *
-                          EXTRA_STORAGE_PRICE_PER_GB *
-                          renewal.months
-                        ).toLocaleString("en-IN")}
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-              <p className="renew-invoice-total">
-                Total payable: ₹{renewal.amountInr.toLocaleString("en-IN")}
-              </p>
-
-              {(invoiceCompany?.accountNumber || invoiceCompany?.ifsc) && (
-                <div className="renew-bank-box">
-                  <h4>Bank transfer details</h4>
-                  <p>
-                    <strong>Account name:</strong> {invoiceCompany?.accountName}
-                  </p>
-                  <p>
-                    <strong>Bank:</strong> {invoiceCompany?.bankName}
-                    {invoiceCompany?.bankBranch ? ` — ${invoiceCompany.bankBranch}` : ""}
-                  </p>
-                  <p>
-                    <strong>Account type:</strong> {invoiceCompany?.accountType}
-                  </p>
-                  <p>
-                    <strong>Account number:</strong> {invoiceCompany?.accountNumber}
-                  </p>
-                  <p>
-                    <strong>IFSC:</strong> {invoiceCompany?.ifsc}
-                  </p>
-                  <p className="muted">
-                    Prefer UPI QR on the right for faster payment. Use bank transfer if needed,
-                    then submit UTR below.
-                  </p>
-                </div>
+            <TaxInvoice
+              invoiceNo={renewal.invoiceNo}
+              dated={new Date()}
+              seller={seller}
+              buyer={{
+                company: renewal.company,
+                address: renewal.billingAddress,
+                gstin: renewal.gstin,
+                email: renewal.email,
+                phone: renewal.phone,
+                contactPerson: renewal.contactPerson ?? contactPerson,
+                stateName: renewal.buyerState ?? buyerState,
+                stateCode: renewal.buyerStateCode ?? buyerStateCode,
+              }}
+              reference={{
+                instance: renewal.instance,
+                site: renewal.site,
+                trialEnd: renewal.trialEnd,
+                extendTo: renewal.trialEndExtendTo,
+                plan: renewal.plan,
+              }}
+              lines={buildInvoiceLines(
+                renewal.plan,
+                renewal.users,
+                renewal.months,
+                renewal.extraGb
               )}
-
-              <button type="button" className="mkt-btn mkt-btn--ghost no-print" onClick={printInvoice}>
-                Print / Save PDF
-              </button>
-            </article>
+              gst={calcGstBreakdown(
+                calcTaxableInr(renewal.plan, renewal.users, renewal.months, renewal.extraGb)
+              )}
+              remarks={`Kalpanik subscription renewal. Invoice ${renewal.invoiceNo}. Pay via UPI/Bank and submit UTR.`}
+              onPrint={printInvoice}
+            />
 
             {step === "pay" && (
               <aside className="renew-upi no-print">
                 <h3>Pay via UPI</h3>
                 <p className="renew-upi-amount">
-                  ₹{renewal.amountInr.toLocaleString("en-IN")}
+                  ₹{Number(renewal.amountInr).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                 </p>
                 <p className="renew-upi-id">{upiId}</p>
                 {qrDataUrl ? (
@@ -440,7 +399,8 @@ export function RenewPage() {
                   Open UPI App
                 </a>
                 <p className="renew-upi-hint">
-                  Scan the QR or open your UPI app, pay the exact amount, then enter UTR below.
+                  Amount includes GST (18%). Scan QR, pay exact amount, then enter UTR below.
+                  Invoice number is sent as payment remark.
                 </p>
 
                 <form className="renew-proof-form" onSubmit={submitProof}>
@@ -475,8 +435,7 @@ export function RenewPage() {
                 </p>
                 {renewal.site && (
                   <p>
-                    After activation, return to{" "}
-                    <a href={renewal.site}>{renewal.site}</a>
+                    After activation, return to <a href={renewal.site}>{renewal.site}</a>
                   </p>
                 )}
               </aside>

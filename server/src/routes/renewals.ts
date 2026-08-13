@@ -88,6 +88,10 @@ renewalsRouter.post("/", createLimiter, async (req, res) => {
       billingAddress:
         typeof req.body?.billingAddress === "string" ? req.body.billingAddress : undefined,
       gstin: typeof req.body?.gstin === "string" ? req.body.gstin : undefined,
+      contactPerson: typeof req.body?.contactPerson === "string" ? req.body.contactPerson : undefined,
+      buyerState: typeof req.body?.buyerState === "string" ? req.body.buyerState : undefined,
+      buyerStateCode:
+        typeof req.body?.buyerStateCode === "string" ? req.body.buyerStateCode : undefined,
       source: typeof req.body?.source === "string" ? req.body.source : "website",
     });
 

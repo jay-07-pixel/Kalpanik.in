@@ -27,6 +27,9 @@ export interface RenewalRow extends RowDataPacket {
   trial_end: string | null;
   billing_address: string | null;
   gstin: string | null;
+  contact_person: string | null;
+  buyer_state: string | null;
+  buyer_state_code: string | null;
   source: string | null;
   status: RenewalStatus;
   utr: string | null;
@@ -53,6 +56,9 @@ export interface CreateRenewalInput {
   trialEnd?: string;
   billingAddress?: string;
   gstin?: string;
+  contactPerson?: string;
+  buyerState?: string;
+  buyerStateCode?: string;
   source?: string;
 }
 
@@ -79,8 +85,9 @@ export async function createRenewal(input: CreateRenewalInput): Promise<RenewalR
   const [result] = await pool.execute<ResultSetHeader>(
     `INSERT INTO renewals
       (invoice_no, instance, site, company, email, phone, users, plan, months, extra_gb,
-       amount_inr, trial_end, billing_address, gstin, source, status, trial_end_extend_to)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
+       amount_inr, trial_end, billing_address, gstin, contact_person, buyer_state, buyer_state_code,
+       source, status, trial_end_extend_to)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
     [
       invoiceNo,
       input.instance?.trim() || null,
@@ -96,6 +103,9 @@ export async function createRenewal(input: CreateRenewalInput): Promise<RenewalR
       input.trialEnd || null,
       input.billingAddress?.trim() || null,
       input.gstin?.trim() || null,
+      input.contactPerson?.trim() || null,
+      input.buyerState?.trim() || null,
+      input.buyerStateCode?.trim() || null,
       input.source?.trim() || "website",
       trialEndExtendTo,
     ]
@@ -261,6 +271,9 @@ export function serializeRenewal(row: RenewalRow) {
     trialEnd: row.trial_end,
     billingAddress: row.billing_address,
     gstin: row.gstin,
+    contactPerson: row.contact_person,
+    buyerState: row.buyer_state,
+    buyerStateCode: row.buyer_state_code,
     source: row.source,
     status: row.status,
     utr: row.utr,

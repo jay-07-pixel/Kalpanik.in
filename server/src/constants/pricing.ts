@@ -36,6 +36,21 @@ export function calcAmountInr(
   const u = Math.max(1, Math.floor(users));
   const m = Math.max(1, Math.floor(months));
   const g = Math.max(0, Math.floor(extraGb));
+  const taxable = planPrice * u * m + g * EXTRA_STORAGE_PRICE_PER_GB * m;
+  // Store / charge GST-inclusive total (18% = CGST 9% + SGST 9%)
+  return Math.round((taxable * 1.18 + Number.EPSILON) * 100) / 100;
+}
+
+export function calcTaxableInr(
+  plan: PlanId,
+  users: number,
+  months: number,
+  extraGb: number
+): number {
+  const planPrice = PLAN_PRICES[plan] ?? 0;
+  const u = Math.max(1, Math.floor(users));
+  const m = Math.max(1, Math.floor(months));
+  const g = Math.max(0, Math.floor(extraGb));
   return planPrice * u * m + g * EXTRA_STORAGE_PRICE_PER_GB * m;
 }
 

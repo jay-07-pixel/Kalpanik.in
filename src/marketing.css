@@ -349,9 +349,218 @@
   color: #7dd3fc;
 }
 
-/* Renew */
+/* Tally-style Tax Invoice */
+.tax-invoice {
+  background: #fff;
+  color: #111;
+  border: 2px solid #111;
+  padding: 0;
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.tax-invoice-title {
+  text-align: center;
+  font-size: 1.15rem;
+  font-weight: 700;
+  padding: 0.55rem;
+  border-bottom: 1px solid #111;
+}
+
+.tax-invoice-top {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  border-bottom: 1px solid #111;
+}
+
+.tax-invoice-seller,
+.tax-invoice-meta-grid,
+.tax-invoice-buyer > div,
+.tax-bank,
+.tax-sign {
+  padding: 0.75rem;
+}
+
+.tax-invoice-seller {
+  border-right: 1px solid #111;
+}
+
+.tax-invoice-logo {
+  height: 1.8rem;
+  width: auto;
+  margin-bottom: 0.4rem;
+}
+
+.tax-invoice-seller h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.05rem;
+}
+
+.tax-muted {
+  color: #444;
+  margin: 0 0 0.2rem;
+}
+
+.tax-invoice-meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.tax-invoice-meta-grid > div {
+  border-bottom: 1px solid #ddd;
+  border-right: 1px solid #ddd;
+  padding: 0.35rem 0.45rem;
+}
+
+.tax-invoice-meta-grid span {
+  display: block;
+  font-size: 0.68rem;
+  color: #555;
+}
+
+.tax-invoice-buyer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-bottom: 1px solid #111;
+}
+
+.tax-invoice-buyer > div:first-child {
+  border-right: 1px solid #111;
+}
+
+.tax-invoice-buyer h3,
+.tax-bank h4 {
+  margin: 0 0 0.4rem;
+  font-size: 0.85rem;
+}
+
+.tax-lines,
+.tax-summary {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tax-lines th,
+.tax-lines td,
+.tax-summary th,
+.tax-summary td {
+  border: 1px solid #111;
+  padding: 0.35rem 0.4rem;
+  vertical-align: top;
+}
+
+.tax-lines th,
+.tax-summary th {
+  background: #f3f4f6;
+  font-size: 0.72rem;
+}
+
+.tax-lines .num,
+.tax-summary .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.tax-total-row td {
+  background: #fafafa;
+}
+
+.tax-words {
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid #111;
+}
+
+.tax-words span {
+  float: right;
+  color: #555;
+}
+
+.tax-remarks {
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid #111;
+}
+
+.tax-footer-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  border-bottom: 1px solid #111;
+}
+
+.tax-bank {
+  border-right: 1px solid #111;
+}
+
+.tax-sign {
+  text-align: right;
+}
+
+.tax-sign-space {
+  height: 3.5rem;
+}
+
+.tax-jurisdiction,
+.tax-computer {
+  text-align: center;
+  margin: 0;
+  padding: 0.35rem;
+  font-size: 0.72rem;
+}
+
+.tax-jurisdiction {
+  font-weight: 700;
+  border-bottom: 1px solid #111;
+}
+
+.tax-invoice .mkt-btn {
+  margin: 0.75rem;
+}
+
 .renew-section {
-  max-width: 68rem;
+  max-width: 72rem;
+}
+
+.renew-pay-layout {
+  display: grid;
+  grid-template-columns: 1.35fr 0.75fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .tax-invoice-top,
+  .tax-invoice-buyer,
+  .tax-footer-grid,
+  .tax-invoice-meta-grid,
+  .renew-pay-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .tax-invoice-seller,
+  .tax-invoice-buyer > div:first-child,
+  .tax-bank {
+    border-right: none;
+    border-bottom: 1px solid #111;
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .mkt-shell {
+    background: #fff !important;
+  }
+
+  .renew-pay-layout {
+    display: block;
+  }
+
+  .tax-invoice {
+    border-color: #000;
+  }
 }
 
 .renew-error {
