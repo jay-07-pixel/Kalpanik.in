@@ -710,7 +710,7 @@
   align-items: start;
 }
 
-@media (max-width: 900px) {
+@media screen and (max-width: 900px) {
   .gi-parties,
   .gi-details,
   .renew-pay-layout {
@@ -732,21 +732,83 @@
 }
 
 @media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+    color: #202124 !important;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  #invoice-print,
+  #invoice-print * {
+    visibility: visible;
+  }
+
+  #invoice-print {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+
   .no-print {
     display: none !important;
   }
 
   .mkt-shell {
     background: #fff !important;
+    min-height: 0 !important;
+  }
+
+  .renew-section,
+  .renew-pay-layout,
+  .mkt-section {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: none !important;
   }
 
   .renew-pay-layout {
-    display: block;
+    display: block !important;
   }
 
   .gi-invoice {
-    border: none;
-    border-radius: 0;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .gi-parties,
+  .gi-details {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .gi-header {
+    flex-direction: row !important;
+  }
+
+  .gi-details-amount {
+    text-align: right !important;
+  }
+
+  .gi-summary {
+    margin-left: auto !important;
+    max-width: 22rem !important;
+  }
+
+  .gi-help {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
   }
 
   .gi-page--break {
@@ -972,7 +1034,7 @@
   font-size: 0.75rem;
 }
 
-@media (max-width: 900px) {
+@media screen and (max-width: 900px) {
   .renew-form,
   .renew-pay-layout,
   .renew-grid,
@@ -982,20 +1044,5 @@
 
   .mkt-nav-brand em {
     display: none;
-  }
-}
-
-@media print {
-  .no-print {
-    display: none !important;
-  }
-
-  .mkt-shell {
-    background: #fff;
-  }
-
-  .renew-invoice {
-    border: none;
-    box-shadow: none;
   }
 }

@@ -198,7 +198,107 @@ export function RenewPage() {
     }
   };
 
-  const printInvoice = () => window.print();
+  const printInvoice = () => {
+    const invoice = document.getElementById("invoice-print");
+    if (!invoice) {
+      window.print();
+      return;
+    }
+
+    const win = window.open("", "_blank", "noopener,noreferrer,width=920,height=1200");
+    if (!win) {
+      window.print();
+      return;
+    }
+
+    const clone = invoice.cloneNode(true) as HTMLElement;
+    clone.querySelectorAll("img").forEach((img) => {
+      const abs = new URL(img.getAttribute("src") || "", window.location.href).href;
+      img.setAttribute("src", abs);
+    });
+    clone.querySelectorAll("a[href]").forEach((a) => {
+      const href = a.getAttribute("href");
+      if (href && href.startsWith("/")) {
+        a.setAttribute("href", new URL(href, window.location.origin).href);
+      }
+    });
+
+    const styles = Array.from(
+      document.querySelectorAll('link[rel="stylesheet"], style')
+    )
+      .map((el) => {
+        if (el instanceof HTMLLinkElement) {
+          const href = new URL(el.href, window.location.href).href;
+          return `<link rel="stylesheet" href="${href}" />`;
+        }
+        return el.outerHTML;
+      })
+      .join("\n");
+
+    win.document.open();
+    win.document.write(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <base href="${window.location.origin}/" />
+  <title>Invoice ${renewal?.invoiceNo ?? ""}</title>
+  ${styles}
+  <style>
+    html, body {
+      margin: 0 !important;
+      padding: 0 !important;
+      background: #fff !important;
+      color: #202124 !important;
+    }
+    body { min-height: 0 !important; }
+    .no-print { display: none !important; }
+    .gi-invoice {
+      border: none !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      print-color-adjust: exact;
+      -webkit-print-color-adjust: exact;
+    }
+    .gi-parties, .gi-details { grid-template-columns: 1fr 1fr !important; }
+    .gi-header { flex-direction: row !important; align-items: flex-start !important; }
+    .gi-details-amount { text-align: right !important; }
+    .gi-summary { margin-left: auto !important; max-width: 22rem !important; }
+    .gi-help { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    @page { size: A4; margin: 12mm; }
+    @media print {
+      .gi-page--break { break-before: page; border-top: none; }
+    }
+  </style>
+</head>
+<body>${clone.outerHTML}</body>
+</html>`);
+    win.document.close();
+
+    const runPrint = () => {
+      win.focus();
+      win.print();
+    };
+
+    const images = Array.from(win.document.images);
+    if (images.length === 0) {
+      setTimeout(runPrint, 200);
+      return;
+    }
+
+    Promise.all(
+      images.map(
+        (img) =>
+          new Promise<void>((resolve) => {
+            if (img.complete) {
+              resolve();
+              return;
+            }
+            img.onload = () => resolve();
+            img.onerror = () => resolve();
+          })
+      )
+    ).then(() => setTimeout(runPrint, 150));
+  };
 
   const seller: InvoiceCompany = invoiceCompany ?? {
     legalName: "SHREE S2N SOLUTIONS",
