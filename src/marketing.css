@@ -385,176 +385,318 @@
   color: #7dd3fc;
 }
 
-/* Tally-style Tax Invoice */
-.tax-invoice {
+/* Google-style Tax Invoice */
+.gi-invoice {
   background: #fff;
-  color: #111;
-  border: 2px solid #111;
-  padding: 0;
-  font-size: 0.82rem;
-  line-height: 1.35;
+  color: #202124;
+  font-family: "Google Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  border: 1px solid #e8eaed;
+  border-radius: 0.5rem;
+  overflow: hidden;
 }
 
-.tax-invoice-title {
-  text-align: center;
-  font-size: 1.15rem;
-  font-weight: 700;
-  padding: 0.55rem;
-  border-bottom: 1px solid #111;
+.gi-page {
+  padding: 1.75rem 1.6rem 1.25rem;
+  position: relative;
 }
 
-.tax-invoice-top {
-  display: grid;
-  grid-template-columns: 1.2fr 1fr;
-  border-bottom: 1px solid #111;
+.gi-page--break {
+  border-top: 1px dashed #dadce0;
 }
 
-.tax-invoice-seller,
-.tax-invoice-meta-grid,
-.tax-invoice-buyer > div,
-.tax-bank,
-.tax-sign {
-  padding: 0.75rem;
+.gi-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
 }
 
-.tax-invoice-seller {
-  border-right: 1px solid #111;
+.gi-header--compact {
+  align-items: center;
+  margin-bottom: 1.25rem;
 }
 
-.tax-invoice-logo {
-  height: 1.8rem;
+.gi-logo {
+  height: 1.65rem;
   width: auto;
-  margin-bottom: 0.4rem;
-}
-
-.tax-invoice-seller h2 {
-  margin: 0 0 0.25rem;
-  font-size: 1.05rem;
-}
-
-.tax-muted {
-  color: #444;
-  margin: 0 0 0.2rem;
-}
-
-.tax-invoice-meta-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-}
-
-.tax-invoice-meta-grid > div {
-  border-bottom: 1px solid #ddd;
-  border-right: 1px solid #ddd;
-  padding: 0.35rem 0.45rem;
-}
-
-.tax-invoice-meta-grid span {
+  margin-bottom: 0.85rem;
   display: block;
-  font-size: 0.68rem;
-  color: #555;
 }
 
-.tax-invoice-buyer {
+.gi-header h1 {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  color: #202124;
+}
+
+.gi-invoice-no {
+  margin: 0.35rem 0 0;
+  color: #5f6368;
+  font-size: 0.88rem;
+}
+
+.gi-qr {
+  width: 7.5rem;
+  height: 7.5rem;
+  object-fit: contain;
+  border: 1px solid #e8eaed;
+  border-radius: 0.25rem;
+  background: #fff;
+}
+
+.gi-qr--placeholder {
+  background: repeating-linear-gradient(
+    45deg,
+    #f8f9fa,
+    #f8f9fa 8px,
+    #eef0f2 8px,
+    #eef0f2 16px
+  );
+}
+
+.gi-parties {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  border-bottom: 1px solid #111;
+  gap: 2rem;
+  margin-bottom: 1.75rem;
 }
 
-.tax-invoice-buyer > div:first-child {
-  border-right: 1px solid #111;
+.gi-bill-to h2,
+.gi-seller h2 {
+  margin: 0 0 0.55rem;
+  font-size: 0.95rem;
+  font-weight: 700;
 }
 
-.tax-invoice-buyer h3,
-.tax-bank h4 {
-  margin: 0 0 0.4rem;
+.gi-bill-to p,
+.gi-seller p {
+  margin: 0 0 0.15rem;
+}
+
+.gi-strong {
+  font-weight: 600;
+}
+
+.gi-muted {
+  color: #5f6368;
+}
+
+.gi-details {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #e8eaed;
+}
+
+.gi-details-meta h3 {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+}
+
+.gi-meta-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: baseline;
+  gap: 0.35rem;
+  margin-bottom: 0.45rem;
+  font-size: 0.88rem;
+}
+
+.gi-meta-label {
+  color: #5f6368;
+}
+
+.gi-meta-dots {
+  border-bottom: 1px dotted #bdc1c6;
+  min-width: 1rem;
+  height: 0.7em;
+}
+
+.gi-meta-value {
+  font-weight: 500;
+  text-align: right;
+}
+
+.gi-details-amount {
+  text-align: right;
+  padding-top: 0.35rem;
+}
+
+.gi-hsn {
+  margin: 0 0 0.35rem;
+  color: #5f6368;
   font-size: 0.85rem;
 }
 
-.tax-lines,
-.tax-summary {
+.gi-product {
+  margin: 0 0 0.65rem;
+  font-size: 1.05rem;
+  font-weight: 500;
+}
+
+.gi-big-total {
+  margin: 0;
+  font-size: 2.35rem;
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.gi-total-label {
+  margin: 0.25rem 0 0;
+  color: #5f6368;
+  font-size: 0.85rem;
+}
+
+.gi-summary {
+  max-width: 22rem;
+  margin-left: auto;
+  margin-bottom: 1.5rem;
+}
+
+.gi-summary h3 {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.gi-summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 0.35rem 0;
+  color: #3c4043;
+  font-size: 0.9rem;
+}
+
+.gi-summary-row strong {
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.gi-summary-total {
+  margin-top: 0.25rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid #e8eaed;
+  font-size: 1.05rem;
+}
+
+.gi-summary-total span,
+.gi-summary-total strong {
+  font-weight: 700;
+  color: #202124;
+}
+
+.gi-legal-note {
+  margin: 2rem 0 0;
+  max-width: 36rem;
+  font-size: 0.72rem;
+  color: #5f6368;
+  line-height: 1.45;
+}
+
+.gi-legal-note span {
+  display: inline-block;
+  margin-top: 0.45rem;
+}
+
+.gi-page-no {
+  margin: 1.5rem 0 0;
+  text-align: right;
+  color: #80868b;
+  font-size: 0.75rem;
+}
+
+.gi-lines {
   width: 100%;
   border-collapse: collapse;
+  margin-bottom: 1.25rem;
 }
 
-.tax-lines th,
-.tax-lines td,
-.tax-summary th,
-.tax-summary td {
-  border: 1px solid #111;
-  padding: 0.35rem 0.4rem;
+.gi-lines th,
+.gi-lines td {
+  padding: 0.65rem 0.4rem;
+  text-align: left;
+  border-bottom: 1px solid #e8eaed;
   vertical-align: top;
+  font-size: 0.88rem;
 }
 
-.tax-lines th,
-.tax-summary th {
-  background: #f3f4f6;
-  font-size: 0.72rem;
+.gi-lines th {
+  color: #202124;
+  font-weight: 700;
+  border-bottom-color: #dadce0;
 }
 
-.tax-lines .num,
-.tax-summary .num {
+.gi-lines .num {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-.tax-total-row td {
-  background: #fafafa;
+.gi-discount td {
+  color: #c5221f;
 }
 
-.tax-discount-row td {
-  color: #c2410c;
+.gi-help {
+  margin: 1.25rem 0;
+  padding: 0.9rem 1rem;
+  background: #fef7e0;
+  border-radius: 0.35rem;
+  font-size: 0.86rem;
+  color: #3c4043;
 }
 
-.tax-words {
-  margin: 0;
-  padding: 0.55rem 0.75rem;
-  border-bottom: 1px solid #111;
+.gi-help a {
+  color: #1a73e8;
+  text-decoration: underline;
 }
 
-.tax-words span {
-  float: right;
-  color: #555;
+.gi-help-remarks {
+  margin: 0.45rem 0 0;
+  color: #5f6368;
+  font-size: 0.8rem;
 }
 
-.tax-remarks {
-  margin: 0;
-  padding: 0.55rem 0.75rem;
-  border-bottom: 1px solid #111;
+.gi-bank {
+  margin: 1rem 0 0;
+  padding: 0.9rem 0 0;
+  border-top: 1px solid #e8eaed;
+  max-width: 28rem;
 }
 
-.tax-footer-grid {
+.gi-bank h3 {
+  margin: 0 0 0.55rem;
+  font-size: 0.9rem;
+}
+
+.gi-bank p {
   display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
-  border-bottom: 1px solid #111;
+  grid-template-columns: 8.5rem 1fr;
+  gap: 0.5rem;
+  margin: 0 0 0.3rem;
+  font-size: 0.85rem;
 }
 
-.tax-bank {
-  border-right: 1px solid #111;
+.gi-bank span {
+  color: #5f6368;
 }
 
-.tax-sign {
-  text-align: right;
-}
-
-.tax-sign-space {
-  height: 3.5rem;
-}
-
-.tax-jurisdiction,
-.tax-computer {
+.gi-computer {
+  margin: 1.25rem 0 0;
   text-align: center;
-  margin: 0;
-  padding: 0.35rem;
-  font-size: 0.72rem;
+  color: #80868b;
+  font-size: 0.75rem;
 }
 
-.tax-jurisdiction {
-  font-weight: 700;
-  border-bottom: 1px solid #111;
-}
-
-.tax-invoice .mkt-btn {
-  margin: 0.75rem;
+.gi-print-btn {
+  margin: 0 1.25rem 1.25rem;
 }
 
 .renew-section {
@@ -569,19 +711,23 @@
 }
 
 @media (max-width: 900px) {
-  .tax-invoice-top,
-  .tax-invoice-buyer,
-  .tax-footer-grid,
-  .tax-invoice-meta-grid,
+  .gi-parties,
+  .gi-details,
   .renew-pay-layout {
     grid-template-columns: 1fr;
   }
 
-  .tax-invoice-seller,
-  .tax-invoice-buyer > div:first-child,
-  .tax-bank {
-    border-right: none;
-    border-bottom: 1px solid #111;
+  .gi-details-amount {
+    text-align: left;
+  }
+
+  .gi-summary {
+    margin-left: 0;
+    max-width: none;
+  }
+
+  .gi-header {
+    flex-direction: column;
   }
 }
 
@@ -598,8 +744,15 @@
     display: block;
   }
 
-  .tax-invoice {
-    border-color: #000;
+  .gi-invoice {
+    border: none;
+    border-radius: 0;
+  }
+
+  .gi-page--break {
+    break-before: page;
+    border-top: none;
+    padding-top: 1.75rem;
   }
 }
 

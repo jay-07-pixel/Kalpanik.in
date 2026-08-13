@@ -15,6 +15,11 @@ export function round2(n: number): number {
   return Math.round((n + Number.EPSILON) * 100) / 100;
 }
 
+export function panFromGstin(gstin?: string | null): string {
+  const g = (gstin || "").replace(/\s/g, "").toUpperCase();
+  return g.length >= 12 ? g.slice(2, 12) : "";
+}
+
 export function calcTaxableInr(
   plan: PlanId,
   users: number,
@@ -47,29 +52,44 @@ export function calcGstBreakdown(taxable: number) {
   return { taxable: round2(taxable), cgst, sgst, totalTax, grandTotal };
 }
 
-export function buildInvoiceLines(plan: PlanId, users: number, months: number, extraGb: number) {
+export interface InvoiceLineItem {
+  subscription: string;
+  description: string;
+  interval: string;
+  qty: number;
+  amount: number;
+  hsn?: string;
+}
+
+export function buildInvoiceLines(
+  plan: PlanId,
+  users: number,
+  months: number,
+  extraGb: number,
+  intervalLabel?: string
+): InvoiceLineItem[] {
   const u = Math.max(1, Math.floor(users));
   const m = Math.max(1, Math.floor(months));
   const g = Math.max(0, Math.floor(extraGb));
+  const interval = intervalLabel || `${m} month${m > 1 ? "s" : ""}`;
   const listPlan = PLANS[plan].listPricePerUser * u * m;
   const netPlan = PLANS[plan].pricePerUser * u * m;
   const planDiscount = listPlan - netPlan;
 
-  const lines = [
+  const lines: InvoiceLineItem[] = [
     {
-      particulars: `Kalpanik ${PLANS[plan].name} Subscription (${m} month${m > 1 ? "s" : ""})`,
-      hsn: DEFAULT_SAC,
+      subscription: `Kalpanik ${PLANS[plan].name}`,
+      description: "Subscription",
+      interval,
       qty: u,
-      unit: "User",
-      rate: PLANS[plan].listPricePerUser * m,
       amount: listPlan,
+      hsn: DEFAULT_SAC,
     },
     {
-      particulars: `Less: Special Customer Discount ${SPECIAL_DISCOUNT_PERCENT}% (Lucky customer offer)`,
-      hsn: "",
+      subscription: `Special Customer Discount ${SPECIAL_DISCOUNT_PERCENT}%`,
+      description: "Lucky customer offer",
+      interval: "",
       qty: 0,
-      unit: "",
-      rate: 0,
       amount: -planDiscount,
     },
   ];
@@ -78,19 +98,18 @@ export function buildInvoiceLines(plan: PlanId, users: number, months: number, e
     const listStorage = EXTRA_STORAGE_LIST_PRICE_PER_GB * g * m;
     const netStorage = EXTRA_STORAGE_PRICE_PER_GB * g * m;
     lines.push({
-      particulars: `Extra Storage (${m} month${m > 1 ? "s" : ""})`,
-      hsn: DEFAULT_SAC,
+      subscription: "Extra Storage",
+      description: "Add-on",
+      interval,
       qty: g,
-      unit: "GB",
-      rate: EXTRA_STORAGE_LIST_PRICE_PER_GB * m,
       amount: listStorage,
+      hsn: DEFAULT_SAC,
     });
     lines.push({
-      particulars: `Less: Storage Special Discount ${SPECIAL_DISCOUNT_PERCENT}%`,
-      hsn: "",
+      subscription: `Storage Discount ${SPECIAL_DISCOUNT_PERCENT}%`,
+      description: "Lucky customer offer",
+      interval: "",
       qty: 0,
-      unit: "",
-      rate: 0,
       amount: -(listStorage - netStorage),
     });
   }

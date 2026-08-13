@@ -389,17 +389,22 @@ export function RenewPage() {
                 trialEnd: renewal.trialEnd,
                 extendTo: renewal.trialEndExtendTo,
                 plan: renewal.plan,
+                months: renewal.months,
               }}
               lines={buildInvoiceLines(
                 renewal.plan,
                 renewal.users,
                 renewal.months,
-                renewal.extraGb
+                renewal.extraGb,
+                renewal.trialEnd && renewal.trialEndExtendTo
+                  ? `${renewal.trialEnd} – ${renewal.trialEndExtendTo}`
+                  : undefined
               )}
               gst={calcGstBreakdown(
                 calcTaxableInr(renewal.plan, renewal.users, renewal.months, renewal.extraGb)
               )}
               remarks={`${BRAND.specialOffer}. Invoice ${renewal.invoiceNo}. Pay via UPI/Bank and submit UTR.`}
+              paymentQrUrl={qrDataUrl || null}
               onPrint={printInvoice}
             />
 
