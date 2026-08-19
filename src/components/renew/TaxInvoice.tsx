@@ -1,5 +1,6 @@
 import { BRAND, PLANS, SPECIAL_DISCOUNT_PERCENT, type PlanId } from "../../constants/pricing";
 import { DEFAULT_SAC, panFromGstin, type InvoiceLineItem } from "../../utils/gst";
+import { stateCodeFromGstin } from "../../utils/indianStates";
 
 export interface GstBreakdown {
   taxable: number;
@@ -144,9 +145,9 @@ export function TaxInvoice({
     reference?.trialEnd && reference?.extendTo
       ? `Summary for ${reference.trialEnd} – ${reference.extendTo}`
       : `Summary for ${months} month${months > 1 ? "s" : ""}`;
-  const useIgst = Boolean(
-    seller.stateCode && buyer.stateCode && seller.stateCode !== buyer.stateCode
-  );
+  const effectiveSellerState = seller.stateCode || stateCodeFromGstin(seller.gstin) || "27";
+  const effectiveBuyerState = buyer.stateCode || stateCodeFromGstin(buyer.gstin || "");
+  const useIgst = Boolean(effectiveBuyerState && effectiveSellerState !== effectiveBuyerState);
   const productLabel = `Kalpanik ${planName}`;
   const hsn = lines.find((l) => l.hsn)?.hsn || DEFAULT_SAC;
 
