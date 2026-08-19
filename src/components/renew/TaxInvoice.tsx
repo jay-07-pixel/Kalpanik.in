@@ -314,10 +314,10 @@ export function TaxInvoice({
           )}
 
           <div className="gi-seal-block">
-            <p>for {seller.legalName}</p>
+            <p className="gi-seal-for">for {seller.legalName.toUpperCase()}</p>
             <img
               src="/seal-signature.png"
-              alt={`${seller.legalName} seal & authorised signatory`}
+              alt={`${seller.legalName} seal`}
               className="gi-seal-img"
             />
             <p className="gi-seal-label">Authorised Signatory</p>
