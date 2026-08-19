@@ -15,6 +15,7 @@ import {
   type PlanId,
 } from "../constants/pricing";
 import { buildInvoiceLines, calcGstBreakdown, calcListInr, calcTaxableInr } from "../utils/gst";
+import { stateCodeFromGstin, stateNameFromCode } from "../utils/indianStates";
 import { API_BASE } from "../constants/admin";
 import "../marketing.css";
 
@@ -78,14 +79,24 @@ export function RenewPage() {
   const [plan, setPlan] = useState<PlanId>(
     isPlanId(params.get("plan") ?? "") ? (params.get("plan") as PlanId) : "task_attendance"
   );
-  const [billingAddress, setBillingAddress] = useState("");
-  const [gstin, setGstin] = useState("");
-  const [buyerState, setBuyerState] = useState("");
-  const [buyerStateCode, setBuyerStateCode] = useState("");
+  const [billingAddress, setBillingAddress] = useState(params.get("address") ?? "");
+  const [gstin, setGstin] = useState(params.get("gstin") ?? "");
+  const [buyerState, setBuyerState] = useState(params.get("state") ?? "");
+  const [buyerStateCode, setBuyerStateCode] = useState(params.get("stateCode") ?? "");
   const [trialEnd] = useState(params.get("trialEnd") ?? "");
   const [instance] = useState(params.get("instance") ?? "");
   const [site] = useState(params.get("site") ?? "");
   const [source] = useState(params.get("source") ?? "website");
+
+  // Auto-fill state from GSTIN (first 2 digits)
+  useEffect(() => {
+    const code = stateCodeFromGstin(gstin);
+    if (code) {
+      setBuyerStateCode(code);
+      const name = stateNameFromCode(code);
+      if (name) setBuyerState(name);
+    }
+  }, [gstin]);
 
   const [step, setStep] = useState<"form" | "pay" | "done">("form");
   const [loading, setLoading] = useState(false);
