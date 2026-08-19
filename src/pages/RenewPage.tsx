@@ -46,6 +46,7 @@ interface InvoiceCompany {
   brandName?: string;
   address: string;
   gstin: string;
+  pan?: string;
   email: string;
   phone: string;
   stateName?: string;
@@ -303,10 +304,16 @@ export function RenewPage() {
   const seller: InvoiceCompany = invoiceCompany ?? {
     legalName: "SHREE S2N SOLUTIONS",
     brandName: "Kalpanik",
-    address: "ANANDAM WORLD CITY",
-    gstin: "",
-    email: "support@kalpanik.in",
-    phone: "",
+    address:
+      "'SaRamya', 82 Gawande Layout, Baba Farid Nagar, Near Good Shephard Church, Off Koradi Road, Mankapur, Jhingabai Takli, Nagpur - 440030",
+    gstin: "27ADEPT1039M1Z8",
+    pan: "ADEPT1039M",
+    email: "support@ss2n.in",
+    phone: "+91-8007796333",
+    stateName: "Maharashtra",
+    stateCode: "27",
+    udyam: "UDYAM-MH-20-0011047",
+    jurisdiction: "Nagpur",
   };
 
   return (

@@ -285,34 +285,60 @@ export function TaxInvoice({
           {remarks && <p className="gi-help-remarks">{remarks}</p>}
         </div>
 
-        {(seller.bankName || seller.accountNumber) && (
-          <div className="gi-bank">
-            <h3>Company&apos;s Bank Details</h3>
+        <div className="gi-bottom-grid">
+          {(seller.bankName || seller.accountNumber) && (
+            <div className="gi-bank">
+              <h3>Company&apos;s Bank Details</h3>
+              <p>
+                <span>Bank Name</span>
+                <strong>
+                  {seller.bankName}
+                  {seller.accountType ? ` (${seller.accountType})` : ""}
+                </strong>
+              </p>
+              <p>
+                <span>A/c Name</span>
+                <strong>{seller.accountName}</strong>
+              </p>
+              <p>
+                <span>A/c No.</span>
+                <strong>{seller.accountNumber}</strong>
+              </p>
+              <p>
+                <span>Branch &amp; IFSC</span>
+                <strong>
+                  {seller.bankBranch} &amp; {seller.ifsc}
+                </strong>
+              </p>
+            </div>
+          )}
+
+          <div className="gi-seal-block">
+            <p>for {seller.legalName}</p>
+            <img
+              src="/seal-signature.png"
+              alt={`${seller.legalName} seal & authorised signatory`}
+              className="gi-seal-img"
+            />
+            <p className="gi-seal-label">Authorised Signatory</p>
+          </div>
+        </div>
+
+        {sellerPan && (
+          <div className="gi-declaration">
+            <p>Company&apos;s PAN : <strong>{sellerPan}</strong></p>
+            <p className="gi-declare-heading">Declaration</p>
             <p>
-              <span>Bank Name</span>
-              <strong>
-                {seller.bankName}
-                {seller.accountType ? ` (${seller.accountType})` : ""}
-              </strong>
-            </p>
-            <p>
-              <span>A/c Name</span>
-              <strong>{seller.accountName}</strong>
-            </p>
-            <p>
-              <span>A/c No.</span>
-              <strong>{seller.accountNumber}</strong>
-            </p>
-            <p>
-              <span>Branch &amp; IFSC</span>
-              <strong>
-                {seller.bankBranch} &amp; {seller.ifsc}
-              </strong>
+              We declare that this invoice shows the actual price of the goods/services described
+              and that all particulars are true and correct.
             </p>
           </div>
         )}
 
-        <p className="gi-computer">This is a computer-generated invoice</p>
+        <p className="gi-jurisdiction">
+          SUBJECT TO {(seller.jurisdiction || seller.stateName || "INDIA").toUpperCase()} JURISDICTION
+        </p>
+        <p className="gi-computer">This is a Computer Generated Invoice</p>
         <p className="gi-page-no">Page 2 of 2</p>
       </section>
 
