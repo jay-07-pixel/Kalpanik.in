@@ -1165,6 +1165,47 @@
   border-top: 1px solid rgba(148, 163, 184, 0.15);
 }
 
+.admin-renewals-edit {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.admin-renewals-edit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  gap: 0.75rem;
+}
+
+.admin-renewals-edit-grid label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  color: #94a3b8;
+}
+
+.admin-renewals-edit-grid input,
+.admin-renewals-edit-grid select {
+  padding: 0.5rem 0.65rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(15, 23, 42, 0.5);
+  color: #e2e8f0;
+  font-size: 0.85rem;
+}
+
+.admin-renewals-edit-actions {
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.admin-activation-note {
+  margin-top: 0.35rem;
+  color: #fbbf24;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  max-width: 18rem;
+}
+
 @media screen and (max-width: 900px) {
   .renew-form,
   .renew-pay-layout,

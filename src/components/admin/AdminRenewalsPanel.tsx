@@ -6,6 +6,18 @@ function fmtInr(n: number): string {
   return n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function toDateInputValue(iso: string | null | undefined): string {
+  if (!iso) return "";
+  return iso.slice(0, 10);
+}
+
+function activationLabel(status: string | null): string {
+  if (status === "webhook_ok") return "Synced";
+  if (status === "webhook_failed") return "Sync failed";
+  if (status === "manual") return "Manual";
+  return status ?? "—";
+}
+
 interface RenewalItem {
   invoiceNo: string;
   company: string;
@@ -27,18 +39,156 @@ interface RenewalItem {
   createdAt: string;
 }
 
+interface EditDraft {
+  plan: PlanId;
+  users: number;
+  months: number;
+  extraGb: number;
+  trialEndExtendTo: string;
+  site: string;
+}
+
 interface AdminRenewalsPanelProps {
   token: string;
 }
 
 type RenewalFilter = "submitted" | "paid" | "all";
 
+function RenewalEditForm({
+  row,
+  busy,
+  onCancel,
+  onSave,
+  onSaveAndSync,
+  onSyncOnly,
+}: {
+  row: RenewalItem;
+  busy: boolean;
+  onCancel: () => void;
+  onSave: (draft: EditDraft) => void;
+  onSaveAndSync: (draft: EditDraft) => void;
+  onSyncOnly: () => void;
+}) {
+  const [draft, setDraft] = useState<EditDraft>({
+    plan: row.plan,
+    users: row.users,
+    months: row.months,
+    extraGb: row.extraGb,
+    trialEndExtendTo: toDateInputValue(row.trialEndExtendTo),
+    site: row.site ?? "",
+  });
+
+  useEffect(() => {
+    setDraft({
+      plan: row.plan,
+      users: row.users,
+      months: row.months,
+      extraGb: row.extraGb,
+      trialEndExtendTo: toDateInputValue(row.trialEndExtendTo),
+      site: row.site ?? "",
+    });
+  }, [row]);
+
+  return (
+    <div className="admin-renewals-edit">
+      <h4 className="admin-chart-title">Edit subscription — {row.invoiceNo}</h4>
+      <p className="muted">
+        {row.company} · {row.instance ?? "no instance"}
+        {row.site ? ` · ${row.site}` : ""}
+      </p>
+      <div className="admin-renewals-edit-grid">
+        <label>
+          Plan
+          <select
+            value={draft.plan}
+            onChange={(e) => setDraft((d) => ({ ...d, plan: e.target.value as PlanId }))}
+          >
+            {Object.values(PLANS).map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Users
+          <input
+            type="number"
+            min={1}
+            value={draft.users}
+            onChange={(e) => setDraft((d) => ({ ...d, users: Number(e.target.value) || 1 }))}
+          />
+        </label>
+        <label>
+          Months
+          <input
+            type="number"
+            min={1}
+            value={draft.months}
+            onChange={(e) => setDraft((d) => ({ ...d, months: Number(e.target.value) || 1 }))}
+          />
+        </label>
+        <label>
+          Extra GB
+          <input
+            type="number"
+            min={0}
+            value={draft.extraGb}
+            onChange={(e) => setDraft((d) => ({ ...d, extraGb: Number(e.target.value) || 0 }))}
+          />
+        </label>
+        <label>
+          Subscription valid until
+          <input
+            type="date"
+            value={draft.trialEndExtendTo}
+            onChange={(e) => setDraft((d) => ({ ...d, trialEndExtendTo: e.target.value }))}
+          />
+        </label>
+        <label>
+          Company site URL
+          <input
+            type="url"
+            placeholder="https://acs.kalpanik.in"
+            value={draft.site}
+            onChange={(e) => setDraft((d) => ({ ...d, site: e.target.value }))}
+          />
+        </label>
+      </div>
+      {row.activationNote && (
+        <p className="admin-activation-note">{row.activationNote}</p>
+      )}
+      <div className="admin-renewals-actions admin-renewals-edit-actions">
+        <button type="button" className="admin-btn-ghost" disabled={busy} onClick={onCancel}>
+          Cancel
+        </button>
+        <button type="button" className="admin-btn-ghost" disabled={busy} onClick={() => onSave(draft)}>
+          Save only
+        </button>
+        <button
+          type="button"
+          className="admin-btn-primary"
+          disabled={busy}
+          onClick={() => onSaveAndSync(draft)}
+        >
+          {busy ? "…" : "Save & sync to site"}
+        </button>
+        <button type="button" className="admin-btn-ghost" disabled={busy} onClick={onSyncOnly}>
+          Sync without saving
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function AdminRenewalsPanel({ token }: AdminRenewalsPanelProps) {
   const [rows, setRows] = useState<RenewalItem[]>([]);
   const [filter, setFilter] = useState<RenewalFilter>("submitted");
   const [lookupInvoice, setLookupInvoice] = useState("KLP-20260820-8341");
   const [lookupRow, setLookupRow] = useState<RenewalItem | null>(null);
+  const [editingRow, setEditingRow] = useState<RenewalItem | null>(null);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const [folders, setFolders] = useState<Record<string, string>>({});
 
@@ -63,6 +213,17 @@ export function AdminRenewalsPanel({ token }: AdminRenewalsPanelProps) {
   useEffect(() => {
     load();
   }, [load]);
+
+  const handleActivationResult = (activation?: { ok: boolean; note: string }) => {
+    if (!activation) return;
+    if (activation.ok) {
+      setSuccess(activation.note);
+      setError("");
+    } else {
+      setError(activation.note);
+      setSuccess("");
+    }
+  };
 
   const lookupRenewal = async () => {
     const invoiceNo = lookupInvoice.trim();
@@ -99,15 +260,75 @@ export function AdminRenewalsPanel({ token }: AdminRenewalsPanelProps) {
         setError(data.message ?? "Mark paid failed");
         return;
       }
-      if (data.activation?.note) {
-        setError(data.activation.ok ? "" : data.activation.note);
-      }
+      handleActivationResult(data.activation);
       load();
-      if (lookupRow?.invoiceNo === invoiceNo) {
-        lookupRenewal();
-      }
+      if (lookupRow?.invoiceNo === invoiceNo) lookupRenewal();
     } catch {
       setError("Mark paid failed");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const syncToSite = async (invoiceNo: string) => {
+    setBusy(`sync-${invoiceNo}`);
+    try {
+      const res = await fetch(adminApi(`/renewals/${invoiceNo}/sync`), {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setError(data.message ?? "Sync failed");
+        return;
+      }
+      handleActivationResult(data.activation);
+      load();
+      if (lookupRow?.invoiceNo === invoiceNo) lookupRenewal();
+      if (editingRow?.invoiceNo === invoiceNo) setEditingRow(data.data);
+    } catch {
+      setError("Sync failed");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const saveSubscription = async (invoiceNo: string, draft: EditDraft, syncToSiteFlag: boolean) => {
+    setBusy(`save-${invoiceNo}`);
+    setSuccess("");
+    try {
+      const res = await fetch(adminApi(`/renewals/${invoiceNo}`), {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          plan: draft.plan,
+          users: draft.users,
+          months: draft.months,
+          extraGb: draft.extraGb,
+          trialEndExtendTo: draft.trialEndExtendTo || undefined,
+          site: draft.site,
+          syncToSite: syncToSiteFlag,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setError(data.message ?? "Save failed");
+        return;
+      }
+      if (syncToSiteFlag) {
+        handleActivationResult(data.activation);
+      } else {
+        setSuccess("Subscription saved.");
+        setError("");
+      }
+      load();
+      if (lookupRow?.invoiceNo === invoiceNo) lookupRenewal();
+      setEditingRow(data.data);
+    } catch {
+      setError("Save failed");
     } finally {
       setBusy(null);
     }
@@ -141,6 +362,16 @@ export function AdminRenewalsPanel({ token }: AdminRenewalsPanelProps) {
     }
   };
 
+  const startEdit = (row: RenewalItem) => {
+    setEditingRow(row);
+    setSuccess("");
+    setError("");
+  };
+
+  const editBusy = editingRow
+    ? busy === `save-${editingRow.invoiceNo}` || busy === `sync-${editingRow.invoiceNo}`
+    : false;
+
   return (
     <section className="admin-section admin-renewals">
       <div className="admin-header" style={{ marginBottom: "1rem", border: "none", padding: 0 }}>
@@ -168,8 +399,8 @@ export function AdminRenewalsPanel({ token }: AdminRenewalsPanelProps) {
       </div>
 
       <p className="admin-renewals-hint">
-        Only customers who submitted UTR / payment proof appear in the list below. Use lookup for
-        manual bank payments.
+        Edit subscription details here and sync to the company Task Manager site. Sync calls{" "}
+        <code>/api/company/subscription/activate</code> on the site URL.
       </p>
 
       <div className="admin-chart-card admin-renewals-lookup">
@@ -207,6 +438,13 @@ export function AdminRenewalsPanel({ token }: AdminRenewalsPanelProps) {
               >
                 Download Bill
               </button>
+              <button
+                type="button"
+                className="admin-btn-ghost"
+                onClick={() => startEdit(lookupRow)}
+              >
+                Edit & sync
+              </button>
               {lookupRow.status !== "paid" && (
                 <button
                   type="button"
@@ -222,7 +460,21 @@ export function AdminRenewalsPanel({ token }: AdminRenewalsPanelProps) {
         )}
       </div>
 
+      {editingRow && (
+        <div className="admin-chart-card">
+          <RenewalEditForm
+            row={editingRow}
+            busy={editBusy}
+            onCancel={() => setEditingRow(null)}
+            onSave={(draft) => saveSubscription(editingRow.invoiceNo, draft, false)}
+            onSaveAndSync={(draft) => saveSubscription(editingRow.invoiceNo, draft, true)}
+            onSyncOnly={() => syncToSite(editingRow.invoiceNo)}
+          />
+        </div>
+      )}
+
       {error && <p className="admin-error-banner">{error}</p>}
+      {success && <p className="admin-success-banner">{success}</p>}
 
       <div className="admin-chart-card" style={{ overflowX: "auto" }}>
         {rows.length === 0 ? (
@@ -275,9 +527,11 @@ export function AdminRenewalsPanel({ token }: AdminRenewalsPanelProps) {
                       {row.vpsFolder || folders[row.instance ?? ""] || "unmapped"}
                     </div>
                     {row.trialEndExtendTo && (
-                      <div className="muted">extend → {row.trialEndExtendTo}</div>
+                      <div className="muted">valid until {toDateInputValue(row.trialEndExtendTo)}</div>
                     )}
-                    {row.activationNote && <div className="muted">{row.activationNote}</div>}
+                    {row.activationNote && (
+                      <div className="admin-activation-note">{row.activationNote}</div>
+                    )}
                   </td>
                   <td>
                     <div className="admin-renewals-actions">
@@ -289,6 +543,23 @@ export function AdminRenewalsPanel({ token }: AdminRenewalsPanelProps) {
                       >
                         {busy === `bill-${row.invoiceNo}` ? "…" : "Download Bill"}
                       </button>
+                      <button
+                        type="button"
+                        className="admin-btn-ghost"
+                        onClick={() => startEdit(row)}
+                      >
+                        Edit & sync
+                      </button>
+                      {row.status === "paid" && row.activationStatus !== "webhook_ok" && (
+                        <button
+                          type="button"
+                          className="admin-btn-primary"
+                          disabled={busy === `sync-${row.invoiceNo}`}
+                          onClick={() => syncToSite(row.invoiceNo)}
+                        >
+                          {busy === `sync-${row.invoiceNo}` ? "…" : "Retry sync"}
+                        </button>
+                      )}
                       {row.status !== "paid" ? (
                         <button
                           type="button"
@@ -299,7 +570,7 @@ export function AdminRenewalsPanel({ token }: AdminRenewalsPanelProps) {
                           {busy === row.invoiceNo ? "…" : "Mark Paid"}
                         </button>
                       ) : (
-                        <span className="muted">{row.activationStatus}</span>
+                        <span className="muted">{activationLabel(row.activationStatus)}</span>
                       )}
                     </div>
                   </td>
@@ -311,14 +582,17 @@ export function AdminRenewalsPanel({ token }: AdminRenewalsPanelProps) {
       </div>
 
       <div className="admin-chart-card" style={{ marginTop: "1rem" }}>
-        <h3 className="admin-chart-title">Manual VPS checklist (if webhook missing)</h3>
+        <h3 className="admin-chart-title">Manual VPS fallback</h3>
+        <p className="admin-renewals-hint" style={{ marginTop: 0 }}>
+          If sync fails (endpoint not deployed yet), set <code>COMPANY_TRIAL_END</code> in the VPS
+          folder for that instance.
+        </p>
         <ul className="admin-signup-list">
           {Object.entries(folders).map(([code, folder]) => (
             <li key={code}>
               <span className="admin-signup-email">
                 {code} → {folder}
               </span>
-              <span className="admin-signup-date">update COMPANY_TRIAL_END</span>
             </li>
           ))}
         </ul>

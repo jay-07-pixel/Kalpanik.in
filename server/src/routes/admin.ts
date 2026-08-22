@@ -8,9 +8,11 @@ import {
   listRenewals,
   markRenewalPaid,
   serializeRenewal,
+  syncRenewalActivation,
+  updateRenewalSubscription,
 } from "../services/renewalService.js";
+import { INSTANCE_FOLDERS, isPlanId } from "../constants/pricing.js";
 import { buildRenewalBillDocument } from "../services/renewalEmailService.js";
-import { INSTANCE_FOLDERS } from "../constants/pricing.js";
 
 export const adminRouter = Router();
 
@@ -146,6 +148,67 @@ adminRouter.post("/renewals/:invoiceNo/mark-paid", requireAdmin, async (req, res
     return res.status(status).json({
       success: false,
       error: "MARK_PAID_ERROR",
+      message,
+    });
+  }
+});
+
+adminRouter.patch("/renewals/:invoiceNo", requireAdmin, async (req, res) => {
+  try {
+    const invoiceNo = String(req.params.invoiceNo);
+    const plan = typeof req.body?.plan === "string" ? req.body.plan : undefined;
+    if (plan !== undefined && !isPlanId(plan)) {
+      return res.status(400).json({
+        success: false,
+        error: "INVALID_PLAN",
+        message: "Plan must be task_management or task_attendance.",
+      });
+    }
+
+    const result = await updateRenewalSubscription(invoiceNo, {
+      plan,
+      users: req.body?.users !== undefined ? Number(req.body.users) : undefined,
+      months: req.body?.months !== undefined ? Number(req.body.months) : undefined,
+      extraGb: req.body?.extraGb !== undefined ? Number(req.body.extraGb) : undefined,
+      trialEndExtendTo:
+        typeof req.body?.trialEndExtendTo === "string" ? req.body.trialEndExtendTo : undefined,
+      site: typeof req.body?.site === "string" ? req.body.site : undefined,
+      syncToSite: req.body?.syncToSite === true,
+    });
+
+    return res.json({
+      success: true,
+      data: serializeRenewal(result.renewal),
+      activation: result.activation,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to update renewal.";
+    const status = message.includes("not found") ? 404 : 500;
+    console.error("[admin] Renewal update failed:", error);
+    return res.status(status).json({
+      success: false,
+      error: "UPDATE_RENEWAL_ERROR",
+      message,
+    });
+  }
+});
+
+adminRouter.post("/renewals/:invoiceNo/sync", requireAdmin, async (req, res) => {
+  try {
+    const invoiceNo = String(req.params.invoiceNo);
+    const result = await syncRenewalActivation(invoiceNo);
+    return res.json({
+      success: true,
+      data: serializeRenewal(result.renewal),
+      activation: result.activation,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to sync renewal.";
+    const status = message.includes("not found") ? 404 : 500;
+    console.error("[admin] Renewal sync failed:", error);
+    return res.status(status).json({
+      success: false,
+      error: "SYNC_RENEWAL_ERROR",
       message,
     });
   }

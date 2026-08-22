@@ -181,6 +181,59 @@ export async function listRenewals(status?: string): Promise<RenewalRow[]> {
   return rows;
 }
 
+function stripHtml(text: string): string {
+  return text
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function extractWebhookDetail(body: string): string {
+  const preMatch = body.match(/<pre[^>]*>([\s\S]*?)<\/pre>/i);
+  if (preMatch?.[1]?.trim()) return preMatch[1].trim();
+  const stripped = stripHtml(body);
+  return stripped.length > 160 ? `${stripped.slice(0, 160)}…` : stripped;
+}
+
+function manualActivationHint(renewal: RenewalRow): string {
+  const folder = INSTANCE_FOLDERS[renewal.instance ?? ""] ?? renewal.instance ?? "VPS folder";
+  const extend = renewal.trial_end_extend_to ?? "—";
+  return `Manual: set COMPANY_TRIAL_END=${extend} on ${folder}`;
+}
+
+export function formatActivationNoteForDisplay(note: string | null | undefined): string | null {
+  if (!note?.trim()) return null;
+  const trimmed = note.trim();
+  if (!/<!DOCTYPE|<html|<pre/i.test(trimmed)) return trimmed;
+
+  const statusMatch = trimmed.match(/Webhook (\d+)/i);
+  const status = statusMatch?.[1];
+  const htmlChunk = trimmed.match(/Webhook \d+:\s*([\s\S]*?)(?:\.\s*Manual:|$)/i)?.[1] ?? trimmed;
+  const detail = extractWebhookDetail(htmlChunk);
+  const manual = trimmed.includes("Manual:")
+    ? trimmed.slice(trimmed.indexOf("Manual:")).replace(/^Manual:\s*/, "Manual: ")
+    : "";
+
+  if (status && detail) {
+    return manual
+      ? `Site error ${status}: ${detail}. ${manual}`
+      : `Site error ${status}: ${detail}`;
+  }
+
+  const cleaned = stripHtml(trimmed);
+  return cleaned.length > 220 ? `${cleaned.slice(0, 220)}…` : cleaned;
+}
+
+function formatWebhookFailure(status: number, body: string, renewal: RenewalRow): string {
+  const detail = extractWebhookDetail(body);
+  const manual = manualActivationHint(renewal);
+  return detail
+    ? `Site error ${status}: ${detail}. ${manual}`
+    : `Site error ${status}. ${manual}`;
+}
+
 async function callActivationWebhook(renewal: RenewalRow): Promise<{
   ok: boolean;
   note: string;
@@ -189,9 +242,7 @@ async function callActivationWebhook(renewal: RenewalRow): Promise<{
   if (!site) {
     return {
       ok: false,
-      note: `No site URL. Manually update COMPANY_TRIAL_END on VPS folder: ${
-        INSTANCE_FOLDERS[renewal.instance ?? ""] ?? "(unknown)"
-      } → ${renewal.trial_end_extend_to}`,
+      note: `No site URL. ${manualActivationHint(renewal)}`,
     };
   }
 
@@ -210,7 +261,7 @@ async function callActivationWebhook(renewal: RenewalRow): Promise<{
         users: renewal.users,
         months: renewal.months,
         extraGb: renewal.extra_gb,
-        paidAt: new Date().toISOString(),
+        paidAt: renewal.paid_at?.toISOString?.() ?? new Date().toISOString(),
         amountInr: Number(renewal.amount_inr),
         trialEndExtendTo: renewal.trial_end_extend_to,
       }),
@@ -220,18 +271,106 @@ async function callActivationWebhook(renewal: RenewalRow): Promise<{
       const text = await res.text().catch(() => "");
       return {
         ok: false,
-        note: `Webhook ${res.status}: ${text.slice(0, 200)}. Manual: set COMPANY_TRIAL_END=${renewal.trial_end_extend_to} on ${INSTANCE_FOLDERS[renewal.instance ?? ""] ?? renewal.instance}`,
+        note: formatWebhookFailure(res.status, text, renewal),
       };
     }
 
-    return { ok: true, note: `Webhook activated via ${url}` };
+    return { ok: true, note: `Synced to ${site}` };
   } catch (error) {
-    const msg = error instanceof Error ? error.message : "Webhook failed";
+    const msg = error instanceof Error ? error.message : "Connection failed";
     return {
       ok: false,
-      note: `${msg}. Manual: update COMPANY_TRIAL_END to ${renewal.trial_end_extend_to} in VPS folder ${INSTANCE_FOLDERS[renewal.instance ?? ""] ?? "(check instance mapping)"}`,
+      note: `${msg}. ${manualActivationHint(renewal)}`,
     };
   }
+}
+
+export interface UpdateRenewalInput {
+  plan?: PlanId;
+  users?: number;
+  months?: number;
+  extraGb?: number;
+  trialEndExtendTo?: string;
+  site?: string;
+  syncToSite?: boolean;
+}
+
+export async function updateRenewalSubscription(
+  invoiceNo: string,
+  input: UpdateRenewalInput
+): Promise<{
+  renewal: RenewalRow;
+  activation?: { ok: boolean; note: string };
+}> {
+  const renewal = await getRenewalByInvoice(invoiceNo);
+  if (!renewal) throw new Error("Renewal not found");
+
+  const plan = input.plan && isPlanId(input.plan) ? input.plan : renewal.plan;
+  if (input.plan && !isPlanId(input.plan)) throw new Error("Invalid plan");
+
+  const users =
+    input.users !== undefined ? Math.max(1, Math.floor(input.users)) : renewal.users;
+  const months =
+    input.months !== undefined ? Math.max(1, Math.floor(input.months)) : renewal.months;
+  const extraGb =
+    input.extraGb !== undefined ? Math.max(0, Math.floor(input.extraGb)) : renewal.extra_gb;
+  const trialEndExtendTo =
+    input.trialEndExtendTo !== undefined
+      ? input.trialEndExtendTo.trim() || null
+      : renewal.trial_end_extend_to;
+  const site = input.site !== undefined ? input.site.trim() || null : renewal.site;
+  const amount = calcAmountInr(plan, users, months, extraGb);
+
+  await pool.execute(
+    `UPDATE renewals SET
+      plan = ?, users = ?, months = ?, extra_gb = ?, amount_inr = ?,
+      trial_end_extend_to = ?, site = ?, updated_at = NOW()
+     WHERE invoice_no = ?`,
+    [plan, users, months, extraGb, amount, trialEndExtendTo, site, invoiceNo]
+  );
+
+  let updated = await getRenewalByInvoice(invoiceNo);
+  if (!updated) throw new Error("Renewal not found after update");
+
+  if (input.syncToSite) {
+    const activation = await syncRenewalActivation(updated);
+    updated = activation.renewal;
+    return { renewal: updated, activation: activation.activation };
+  }
+
+  return { renewal: updated };
+}
+
+export async function syncRenewalActivation(invoiceNoOrRow: string | RenewalRow): Promise<{
+  renewal: RenewalRow;
+  activation: { ok: boolean; note: string };
+}> {
+  const renewal =
+    typeof invoiceNoOrRow === "string"
+      ? await getRenewalByInvoice(invoiceNoOrRow)
+      : invoiceNoOrRow;
+  if (!renewal) throw new Error("Renewal not found");
+
+  const activation = await callActivationWebhook(renewal);
+  const activationStatus = activation.ok
+    ? "webhook_ok"
+    : renewal.site
+      ? "webhook_failed"
+      : "manual";
+
+  await pool.execute(
+    `UPDATE renewals SET
+      activation_status = ?,
+      activation_note = ?,
+      activated_at = COALESCE(activated_at, NOW()),
+      updated_at = NOW()
+     WHERE invoice_no = ?`,
+    [activationStatus, activation.note, renewal.invoice_no]
+  );
+
+  const updated = await getRenewalByInvoice(renewal.invoice_no);
+  if (!updated) throw new Error("Renewal not found after sync");
+  return { renewal: updated, activation };
 }
 
 export async function markRenewalPaid(invoiceNo: string): Promise<{
@@ -245,7 +384,8 @@ export async function markRenewalPaid(invoiceNo: string): Promise<{
       renewal,
       activation: {
         ok: renewal.activation_status === "webhook_ok",
-        note: renewal.activation_note ?? "Already marked paid",
+        note:
+          formatActivationNoteForDisplay(renewal.activation_note) ?? "Already marked paid",
       },
     };
   }
@@ -313,7 +453,7 @@ export function serializeRenewal(row: RenewalRow) {
     paidAt: row.paid_at,
     activatedAt: row.activated_at,
     activationStatus: row.activation_status,
-    activationNote: row.activation_note,
+    activationNote: formatActivationNoteForDisplay(row.activation_note),
     trialEndExtendTo: row.trial_end_extend_to,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
