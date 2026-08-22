@@ -1,10 +1,11 @@
 export type PlanId = "task_management" | "task_attendance";
 
-export const EXTRA_STORAGE_PRICE_PER_GB = 100;
+/** TEST pricing — restore 299/349 and storage 100 for production */
+export const EXTRA_STORAGE_PRICE_PER_GB = 1;
 
 export const PLAN_PRICES: Record<PlanId, number> = {
-  task_management: 299,
-  task_attendance: 349,
+  task_management: 1,
+  task_attendance: 1,
 };
 
 export const PLAN_NAMES: Record<PlanId, string> = {
@@ -26,21 +27,6 @@ export function isPlanId(value: string): value is PlanId {
   return value === "task_management" || value === "task_attendance";
 }
 
-export function calcAmountInr(
-  plan: PlanId,
-  users: number,
-  months: number,
-  extraGb: number
-): number {
-  const planPrice = PLAN_PRICES[plan] ?? 0;
-  const u = Math.max(1, Math.floor(users));
-  const m = Math.max(1, Math.floor(months));
-  const g = Math.max(0, Math.floor(extraGb));
-  const taxable = planPrice * u * m + g * EXTRA_STORAGE_PRICE_PER_GB * m;
-  // Store / charge GST-inclusive total (18% = CGST 9% + SGST 9%)
-  return Math.round((taxable * 1.18 + Number.EPSILON) * 100) / 100;
-}
-
 export function calcTaxableInr(
   plan: PlanId,
   users: number,
@@ -52,6 +38,26 @@ export function calcTaxableInr(
   const m = Math.max(1, Math.floor(months));
   const g = Math.max(0, Math.floor(extraGb));
   return planPrice * u * m + g * EXTRA_STORAGE_PRICE_PER_GB * m;
+}
+
+/** GST-inclusive total (matches tax invoice grand total). */
+export function calcGrandTotalInr(
+  plan: PlanId,
+  users: number,
+  months: number,
+  extraGb: number
+): number {
+  const taxable = calcTaxableInr(plan, users, months, extraGb);
+  return Math.round((taxable * 1.18 + Number.EPSILON) * 100) / 100;
+}
+
+export function calcAmountInr(
+  plan: PlanId,
+  users: number,
+  months: number,
+  extraGb: number
+): number {
+  return calcGrandTotalInr(plan, users, months, extraGb);
 }
 
 export function extendTrialEnd(from: string | null | undefined, months: number): string {

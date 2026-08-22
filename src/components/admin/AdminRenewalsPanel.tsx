@@ -2,6 +2,10 @@ import { useCallback, useEffect, useState } from "react";
 import { adminApi } from "../../constants/admin";
 import { PLANS, type PlanId } from "../../constants/pricing";
 
+function fmtInr(n: number): string {
+  return n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 interface RenewalItem {
   invoiceNo: string;
   company: string;
@@ -192,7 +196,7 @@ export function AdminRenewalsPanel({ token }: AdminRenewalsPanelProps) {
             </p>
             <p className="muted">
               {PLANS[lookupRow.plan]?.name} · {lookupRow.users} users · {lookupRow.months} mo · ₹
-              {lookupRow.amountInr.toLocaleString("en-IN")} · <strong>{lookupRow.status}</strong>
+              {fmtInr(lookupRow.amountInr)} (incl. GST) · <strong>{lookupRow.status}</strong>
               {lookupRow.utr ? ` · UTR ${lookupRow.utr}` : ""}
             </p>
             <div className="admin-renewals-actions">
@@ -230,7 +234,7 @@ export function AdminRenewalsPanel({ token }: AdminRenewalsPanelProps) {
                 <th>Invoice</th>
                 <th>Customer</th>
                 <th>Plan</th>
-                <th>Amount</th>
+                <th>Total (incl. GST)</th>
                 <th>UTR</th>
                 <th>Instance / VPS</th>
                 <th>Action</th>
@@ -254,7 +258,7 @@ export function AdminRenewalsPanel({ token }: AdminRenewalsPanelProps) {
                       {row.extraGb ? ` · +${row.extraGb} GB` : ""}
                     </div>
                   </td>
-                  <td>₹{row.amountInr.toLocaleString("en-IN")}</td>
+                  <td>₹{fmtInr(row.amountInr)}</td>
                   <td>
                     <strong>{row.utr}</strong>
                     {row.screenshotPath && (

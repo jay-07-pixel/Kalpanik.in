@@ -2,6 +2,8 @@ import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import { pool } from "../db/pool.js";
 import {
   calcAmountInr,
+  calcGrandTotalInr,
+  calcTaxableInr,
   extendTrialEnd,
   isPlanId,
   type PlanId,
@@ -272,6 +274,17 @@ export async function markRenewalPaid(invoiceNo: string): Promise<{
 }
 
 export function serializeRenewal(row: RenewalRow) {
+  const taxableInr = calcTaxableInr(row.plan, row.users, row.months, row.extra_gb);
+  const grandTotalInr = calcGrandTotalInr(row.plan, row.users, row.months, row.extra_gb);
+  const stored = Number(row.amount_inr);
+  // Legacy rows stored pre-GST taxable; display/charge amount matches invoice grand total.
+  const amountInr =
+    Math.abs(stored - grandTotalInr) < 0.02
+      ? stored
+      : Math.abs(stored - taxableInr) < 0.02
+        ? grandTotalInr
+        : stored;
+
   return {
     id: row.id,
     invoiceNo: row.invoice_no,
@@ -284,7 +297,9 @@ export function serializeRenewal(row: RenewalRow) {
     plan: row.plan,
     months: row.months,
     extraGb: row.extra_gb,
-    amountInr: Number(row.amount_inr),
+    amountInr,
+    taxableInr,
+    grandTotalInr,
     trialEnd: row.trial_end,
     billingAddress: row.billing_address,
     gstin: row.gstin,

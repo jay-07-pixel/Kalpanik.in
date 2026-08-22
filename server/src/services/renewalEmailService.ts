@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { config } from "../config.js";
-import { PLAN_NAMES, calcTaxableInr, type PlanId } from "../constants/pricing.js";
+import { PLAN_NAMES, calcGrandTotalInr, calcTaxableInr, type PlanId } from "../constants/pricing.js";
 import { sendMail } from "./emailService.js";
 import type { RenewalRow } from "./renewalService.js";
 
@@ -128,7 +128,7 @@ function buildPlainText(renewal: RenewalRow, utr: string): string {
     `Users: ${renewal.users}`,
     `Months: ${renewal.months}`,
     renewal.site ? `Site: ${renewal.site}` : "",
-    `Amount: ₹${fmt(Number(renewal.amount_inr))}`,
+    `Amount: ₹${fmt(calcGrandTotalInr(renewal.plan as PlanId, renewal.users, renewal.months, renewal.extra_gb))}`,
     "",
     "Pending verification.",
   ]

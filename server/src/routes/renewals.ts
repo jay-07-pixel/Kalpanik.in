@@ -98,17 +98,15 @@ renewalsRouter.post("/", createLimiter, async (req, res) => {
     return res.status(201).json({
       success: true,
       data: serializeRenewal(renewal),
-      payment: {
-        upiId: config.upi.id,
-        upiName: config.upi.name,
-        amount: Number(renewal.amount_inr),
-        upiUri: buildUpiUri(
-          config.upi.id,
-          config.upi.name,
-          Number(renewal.amount_inr),
-          renewal.invoice_no
-        ),
-      },
+      payment: (() => {
+        const data = serializeRenewal(renewal);
+        return {
+          upiId: config.upi.id,
+          upiName: config.upi.name,
+          amount: data.amountInr,
+          upiUri: buildUpiUri(config.upi.id, config.upi.name, data.amountInr, renewal.invoice_no),
+        };
+      })(),
     });
   } catch (error) {
     console.error("[renewals] Create failed:", error);
@@ -140,19 +138,15 @@ renewalsRouter.get("/:invoiceNo", async (req, res) => {
       });
     }
 
+    const data = serializeRenewal(renewal);
     return res.json({
       success: true,
-      data: serializeRenewal(renewal),
+      data,
       payment: {
         upiId: config.upi.id,
         upiName: config.upi.name,
-        amount: Number(renewal.amount_inr),
-        upiUri: buildUpiUri(
-          config.upi.id,
-          config.upi.name,
-          Number(renewal.amount_inr),
-          renewal.invoice_no
-        ),
+        amount: data.amountInr,
+        upiUri: buildUpiUri(config.upi.id, config.upi.name, data.amountInr, renewal.invoice_no),
       },
       invoice: config.invoice,
     });
