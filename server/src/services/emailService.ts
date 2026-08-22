@@ -112,3 +112,24 @@ export async function sendWaitlistAdminNotification(email: string): Promise<void
 export async function verifySmtpConnection(): Promise<void> {
   await transporter.verify();
 }
+
+export interface SendMailOptions {
+  to: string;
+  subject: string;
+  text: string;
+  html: string;
+  replyTo?: string;
+  attachments?: { filename: string; path: string }[];
+}
+
+export async function sendMail(options: SendMailOptions): Promise<void> {
+  await transporter.sendMail({
+    from: `"${config.mail.fromName}" <${config.smtp.from}>`,
+    to: options.to,
+    replyTo: options.replyTo ?? config.mail.replyTo,
+    subject: options.subject,
+    text: options.text,
+    html: options.html,
+    attachments: options.attachments,
+  });
+}

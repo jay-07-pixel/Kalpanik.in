@@ -50,6 +50,7 @@ export const config = {
     fromName: optional("MAIL_FROM_NAME", "Kalpanik"),
     replyTo: optional("MAIL_REPLY_TO", "support@kalpanik.in"),
     notifyTo: optional("ADMIN_NOTIFY_EMAIL", "support@kalpanik.in"),
+    renewalNotifyTo: optional("KALPANIK_RENEWAL_NOTIFY_EMAIL", "jayjobanputra007@gmail.com"),
   },
   admin: {
     email: required("ADMIN_EMAIL"),

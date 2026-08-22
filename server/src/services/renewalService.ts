@@ -8,6 +8,7 @@ import {
   INSTANCE_FOLDERS,
 } from "../constants/pricing.js";
 import { config } from "../config.js";
+import { sendRenewalProofEmails } from "./renewalEmailService.js";
 
 export type RenewalStatus = "draft" | "pending" | "paid" | "failed" | "cancelled";
 
@@ -137,6 +138,8 @@ export async function submitPaymentProof(
   if (!renewal) throw new Error("Renewal not found");
   if (renewal.status === "paid") throw new Error("Already paid");
 
+  const isFirstProof = !renewal.utr?.trim();
+
   await pool.execute(
     `UPDATE renewals SET utr = ?, screenshot_path = COALESCE(?, screenshot_path), status = 'pending', updated_at = NOW()
      WHERE invoice_no = ?`,
@@ -145,6 +148,13 @@ export async function submitPaymentProof(
 
   const updated = await getRenewalByInvoice(invoiceNo);
   if (!updated) throw new Error("Renewal not found after update");
+
+  if (isFirstProof) {
+    sendRenewalProofEmails(updated, utr.trim(), screenshotPath).catch((err) => {
+      console.error("[renewals] Proof email failed:", err);
+    });
+  }
+
   return updated;
 }
 

@@ -756,6 +756,35 @@
   font-size: 0.75rem;
 }
 
+.gi-preview-banner {
+  margin: 0;
+  padding: 0.65rem 1rem;
+  background: #fef7e0;
+  color: #9a3412;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-bottom: 1px solid #fde68a;
+}
+
+.gi-invoice--locked {
+  position: relative;
+}
+
+@media print {
+  body.renew-print-locked #invoice-print,
+  .gi-invoice--locked {
+    display: none !important;
+  }
+
+  body.renew-print-locked::after {
+    content: "Submit payment proof (UTR) to unlock invoice printing.";
+    display: block;
+    padding: 2rem;
+    font-size: 1.1rem;
+    text-align: center;
+  }
+}
+
 .gi-print-btn {
   margin: 0 1.25rem 1.25rem;
 }

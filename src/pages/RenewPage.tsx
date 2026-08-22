@@ -182,6 +182,20 @@ export function RenewPage() {
     }
   };
 
+  const canPrint = step === "done" && Boolean(renewal?.utr);
+
+  useEffect(() => {
+    if (canPrint) {
+      document.body.classList.remove("renew-print-locked");
+      return;
+    }
+    if (step === "pay") {
+      document.body.classList.add("renew-print-locked");
+      return () => document.body.classList.remove("renew-print-locked");
+    }
+    document.body.classList.remove("renew-print-locked");
+  }, [step, canPrint]);
+
   const submitProof = async (e: FormEvent) => {
     e.preventDefault();
     if (!renewal) return;
@@ -523,7 +537,8 @@ export function RenewPage() {
               )}
               remarks={`${BRAND.specialOffer}. Invoice ${renewal.invoiceNo}. Pay via UPI/Bank and submit UTR.`}
               paymentQrUrl={qrDataUrl || null}
-              onPrint={printInvoice}
+              allowPrint={canPrint}
+              onPrint={canPrint ? printInvoice : undefined}
             />
 
             {step === "pay" && (
@@ -576,6 +591,14 @@ export function RenewPage() {
                   We’ll activate your subscription after confirming UTR{" "}
                   <strong>{renewal.utr}</strong>.
                 </p>
+                <p>A copy of your invoice has been emailed to you.</p>
+                <button
+                  type="button"
+                  className="mkt-btn mkt-btn--primary"
+                  onClick={printInvoice}
+                >
+                  Print / Save PDF
+                </button>
                 {renewal.site && (
                   <p>
                     After activation, return to <a href={renewal.site}>{renewal.site}</a>

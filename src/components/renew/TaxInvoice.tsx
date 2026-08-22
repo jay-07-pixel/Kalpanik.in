@@ -57,6 +57,7 @@ export interface TaxInvoiceProps {
   gst: GstBreakdown;
   remarks?: string;
   paymentQrUrl?: string | null;
+  allowPrint?: boolean;
   onPrint?: () => void;
 }
 
@@ -133,6 +134,7 @@ export function TaxInvoice({
   gst,
   remarks,
   paymentQrUrl,
+  allowPrint = false,
   onPrint,
 }: TaxInvoiceProps) {
   const placeOfSupply = buyer.stateName || buyer.stateCode || seller.stateName || "—";
@@ -152,7 +154,15 @@ export function TaxInvoice({
   const hsn = lines.find((l) => l.hsn)?.hsn || DEFAULT_SAC;
 
   return (
-    <article className="gi-invoice" id="invoice-print">
+    <article
+      className={`gi-invoice${allowPrint ? "" : " gi-invoice--locked"}`}
+      id="invoice-print"
+    >
+      {!allowPrint && (
+        <p className="gi-preview-banner no-print">
+          Preview only — submit UTR / payment proof to unlock Print / Save PDF.
+        </p>
+      )}
       {/* —— Page 1 style overview —— */}
       <section className="gi-page">
         <header className="gi-header">
@@ -343,7 +353,7 @@ export function TaxInvoice({
         <p className="gi-page-no">Page 2 of 2</p>
       </section>
 
-      {onPrint && (
+      {allowPrint && onPrint && (
         <button type="button" className="mkt-btn mkt-btn--ghost no-print gi-print-btn" onClick={onPrint}>
           Print / Save PDF
         </button>
