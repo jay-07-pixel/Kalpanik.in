@@ -10,6 +10,7 @@ import {
   serializeRenewal,
   syncRenewalActivation,
   updateRenewalSubscription,
+  markRenewalManualActivation,
 } from "../services/renewalService.js";
 import { INSTANCE_FOLDERS, isPlanId } from "../constants/pricing.js";
 import { buildRenewalBillDocument } from "../services/renewalEmailService.js";
@@ -209,6 +210,26 @@ adminRouter.post("/renewals/:invoiceNo/sync", requireAdmin, async (req, res) => 
     return res.status(status).json({
       success: false,
       error: "SYNC_RENEWAL_ERROR",
+      message,
+    });
+  }
+});
+
+adminRouter.post("/renewals/:invoiceNo/mark-manual", requireAdmin, async (req, res) => {
+  try {
+    const invoiceNo = String(req.params.invoiceNo);
+    const renewal = await markRenewalManualActivation(invoiceNo);
+    return res.json({
+      success: true,
+      data: serializeRenewal(renewal),
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to mark manual activation.";
+    const status = message.includes("not found") ? 404 : 500;
+    console.error("[admin] Manual activation failed:", error);
+    return res.status(status).json({
+      success: false,
+      error: "MANUAL_ACTIVATION_ERROR",
       message,
     });
   }

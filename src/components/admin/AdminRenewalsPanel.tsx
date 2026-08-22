@@ -334,6 +334,30 @@ export function AdminRenewalsPanel({ token }: AdminRenewalsPanelProps) {
     }
   };
 
+  const markManual = async (invoiceNo: string) => {
+    setBusy(`manual-${invoiceNo}`);
+    try {
+      const res = await fetch(adminApi(`/renewals/${invoiceNo}/mark-manual`), {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setError(data.message ?? "Could not mark manual activation");
+        return;
+      }
+      setSuccess("Marked as manually activated on VPS.");
+      setError("");
+      load();
+      if (lookupRow?.invoiceNo === invoiceNo) lookupRenewal();
+      if (editingRow?.invoiceNo === invoiceNo) setEditingRow(data.data);
+    } catch {
+      setError("Could not mark manual activation");
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const openBill = async (invoiceNo: string) => {
     setBusy(`bill-${invoiceNo}`);
     try {
@@ -551,14 +575,24 @@ export function AdminRenewalsPanel({ token }: AdminRenewalsPanelProps) {
                         Edit & sync
                       </button>
                       {row.status === "paid" && row.activationStatus !== "webhook_ok" && (
-                        <button
-                          type="button"
-                          className="admin-btn-primary"
-                          disabled={busy === `sync-${row.invoiceNo}`}
-                          onClick={() => syncToSite(row.invoiceNo)}
-                        >
-                          {busy === `sync-${row.invoiceNo}` ? "…" : "Retry sync"}
-                        </button>
+                        <>
+                          <button
+                            type="button"
+                            className="admin-btn-primary"
+                            disabled={busy === `sync-${row.invoiceNo}`}
+                            onClick={() => syncToSite(row.invoiceNo)}
+                          >
+                            {busy === `sync-${row.invoiceNo}` ? "…" : "Retry sync"}
+                          </button>
+                          <button
+                            type="button"
+                            className="admin-btn-ghost"
+                            disabled={busy === `manual-${row.invoiceNo}`}
+                            onClick={() => markManual(row.invoiceNo)}
+                          >
+                            {busy === `manual-${row.invoiceNo}` ? "…" : "Mark manual (VPS done)"}
+                          </button>
+                        </>
                       )}
                       {row.status !== "paid" ? (
                         <button

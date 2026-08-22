@@ -414,6 +414,29 @@ export async function markRenewalPaid(invoiceNo: string): Promise<{
   return { renewal: updated, activation };
 }
 
+export async function markRenewalManualActivation(invoiceNo: string): Promise<RenewalRow> {
+  const renewal = await getRenewalByInvoice(invoiceNo);
+  if (!renewal) throw new Error("Renewal not found");
+
+  const folder = INSTANCE_FOLDERS[renewal.instance ?? ""] ?? renewal.instance ?? "VPS folder";
+  const extend = renewal.trial_end_extend_to?.slice(0, 10) ?? "—";
+  const note = `Manually activated on ${folder}. COMPANY_TRIAL_END=${extend}`;
+
+  await pool.execute(
+    `UPDATE renewals SET
+      activation_status = 'manual',
+      activation_note = ?,
+      activated_at = COALESCE(activated_at, NOW()),
+      updated_at = NOW()
+     WHERE invoice_no = ?`,
+    [note, invoiceNo]
+  );
+
+  const updated = await getRenewalByInvoice(invoiceNo);
+  if (!updated) throw new Error("Renewal not found after manual activation");
+  return updated;
+}
+
 export function serializeRenewal(row: RenewalRow) {
   const taxableInr = calcTaxableInr(row.plan, row.users, row.months, row.extra_gb);
   const grandTotalInr = calcGrandTotalInr(row.plan, row.users, row.months, row.extra_gb);
