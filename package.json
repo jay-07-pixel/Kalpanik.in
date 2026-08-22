@@ -9,6 +9,7 @@
     "dev:all": "concurrently \"npm run dev:api\" \"npm run dev\"",
     "build": "tsc -b && vite build",
     "build:api": "tsc -p tsconfig.server.json",
+    "mark-paid": "node dist-server/scripts/markInvoicePaid.js",
     "start:api": "node dist-server/index.js",
     "preview": "vite preview"
   },

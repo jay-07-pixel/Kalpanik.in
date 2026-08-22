@@ -1139,6 +1139,32 @@
   align-items: flex-start;
 }
 
+.admin-renewals-lookup {
+  margin-bottom: 1rem;
+}
+
+.admin-renewals-lookup-row {
+  display: flex;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.admin-renewals-lookup-row input {
+  flex: 1;
+  min-width: 14rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(15, 23, 42, 0.5);
+  color: #e2e8f0;
+}
+
+.admin-renewals-lookup-result {
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.15);
+}
+
 @media screen and (max-width: 900px) {
   .renew-form,
   .renew-pay-layout,

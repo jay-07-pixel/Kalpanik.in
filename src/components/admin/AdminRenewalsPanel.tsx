@@ -32,6 +32,8 @@ type RenewalFilter = "submitted" | "paid" | "all";
 export function AdminRenewalsPanel({ token }: AdminRenewalsPanelProps) {
   const [rows, setRows] = useState<RenewalItem[]>([]);
   const [filter, setFilter] = useState<RenewalFilter>("submitted");
+  const [lookupInvoice, setLookupInvoice] = useState("KLP-20260820-8341");
+  const [lookupRow, setLookupRow] = useState<RenewalItem | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const [folders, setFolders] = useState<Record<string, string>>({});
@@ -58,6 +60,29 @@ export function AdminRenewalsPanel({ token }: AdminRenewalsPanelProps) {
     load();
   }, [load]);
 
+  const lookupRenewal = async () => {
+    const invoiceNo = lookupInvoice.trim();
+    if (!invoiceNo) return;
+    setBusy(`lookup-${invoiceNo}`);
+    setLookupRow(null);
+    try {
+      const res = await fetch(adminApi(`/renewals/${encodeURIComponent(invoiceNo)}`), {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setError(data.message ?? "Invoice not found");
+        return;
+      }
+      setLookupRow(data.data);
+      setError("");
+    } catch {
+      setError("Lookup failed");
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const markPaid = async (invoiceNo: string) => {
     setBusy(invoiceNo);
     try {
@@ -74,6 +99,9 @@ export function AdminRenewalsPanel({ token }: AdminRenewalsPanelProps) {
         setError(data.activation.ok ? "" : data.activation.note);
       }
       load();
+      if (lookupRow?.invoiceNo === invoiceNo) {
+        lookupRenewal();
+      }
     } catch {
       setError("Mark paid failed");
     } finally {
@@ -136,8 +164,59 @@ export function AdminRenewalsPanel({ token }: AdminRenewalsPanelProps) {
       </div>
 
       <p className="admin-renewals-hint">
-        Only customers who submitted UTR / payment proof appear here.
+        Only customers who submitted UTR / payment proof appear in the list below. Use lookup for
+        manual bank payments.
       </p>
+
+      <div className="admin-chart-card admin-renewals-lookup">
+        <h3 className="admin-chart-title">Mark payment received (manual)</h3>
+        <div className="admin-renewals-lookup-row">
+          <input
+            value={lookupInvoice}
+            onChange={(e) => setLookupInvoice(e.target.value)}
+            placeholder="Invoice number e.g. KLP-20260820-8341"
+          />
+          <button
+            type="button"
+            className="admin-btn-ghost"
+            disabled={busy?.startsWith("lookup-")}
+            onClick={lookupRenewal}
+          >
+            Find
+          </button>
+        </div>
+        {lookupRow && (
+          <div className="admin-renewals-lookup-result">
+            <p>
+              <strong>{lookupRow.company}</strong> — {lookupRow.email}
+            </p>
+            <p className="muted">
+              {PLANS[lookupRow.plan]?.name} · {lookupRow.users} users · {lookupRow.months} mo · ₹
+              {lookupRow.amountInr.toLocaleString("en-IN")} · <strong>{lookupRow.status}</strong>
+              {lookupRow.utr ? ` · UTR ${lookupRow.utr}` : ""}
+            </p>
+            <div className="admin-renewals-actions">
+              <button
+                type="button"
+                className="admin-btn-ghost"
+                onClick={() => openBill(lookupRow.invoiceNo)}
+              >
+                Download Bill
+              </button>
+              {lookupRow.status !== "paid" && (
+                <button
+                  type="button"
+                  className="admin-btn-primary"
+                  disabled={busy === lookupRow.invoiceNo}
+                  onClick={() => markPaid(lookupRow.invoiceNo)}
+                >
+                  {busy === lookupRow.invoiceNo ? "…" : "Mark Paid & Activate"}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
 
       {error && <p className="admin-error-banner">{error}</p>}
 

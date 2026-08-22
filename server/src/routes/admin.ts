@@ -150,3 +150,29 @@ adminRouter.post("/renewals/:invoiceNo/mark-paid", requireAdmin, async (req, res
     });
   }
 });
+
+adminRouter.get("/renewals/:invoiceNo", requireAdmin, async (req, res) => {
+  try {
+    const invoiceNo = String(req.params.invoiceNo);
+    const renewal = await getRenewalByInvoice(invoiceNo);
+    if (!renewal) {
+      return res.status(404).json({
+        success: false,
+        error: "NOT_FOUND",
+        message: "Invoice not found.",
+      });
+    }
+    return res.json({
+      success: true,
+      data: serializeRenewal(renewal),
+      instanceFolders: INSTANCE_FOLDERS,
+    });
+  } catch (error) {
+    console.error("[admin] Renewal lookup failed:", error);
+    return res.status(500).json({
+      success: false,
+      error: "SERVER_ERROR",
+      message: "Failed to load renewal.",
+    });
+  }
+});
