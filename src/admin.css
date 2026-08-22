@@ -831,3 +831,26 @@
     flex: 1;
   }
 }
+
+.admin-bill-frame {
+  border: none;
+  display: block;
+  width: 100%;
+  height: 100vh;
+  background: #f0f4f8;
+}
+
+.admin-bill-status {
+  margin: 0;
+  padding: 2rem 1.5rem;
+  font-family: system-ui, sans-serif;
+  color: #334155;
+}
+
+.admin-bill-status--error {
+  color: #b91c1c;
+}
+
+.admin-bill-status a {
+  color: #0ea5e9;
+}

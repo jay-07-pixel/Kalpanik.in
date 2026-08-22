@@ -398,40 +398,16 @@ export function AdminRenewalsPanel({ token }: AdminRenewalsPanelProps) {
     }
   };
 
-  const openBill = async (invoiceNo: string) => {
-    // Open synchronously on click — noopener would return null and leave about:blank.
-    const win = window.open("", "_blank", "noreferrer,width=920,height=1200");
+  const openBill = (invoiceNo: string) => {
+    const url = `/admin/bill/${encodeURIComponent(invoiceNo)}`;
+    const win = window.open(url, "_blank");
     if (!win) {
-      setError("Pop-up blocked. Allow pop-ups to view the bill.");
+      setError(
+        `Pop-up blocked. Right-click Bill → Open link, or open: ${window.location.origin}${url}`
+      );
       return;
     }
-    win.opener = null;
-    win.document.write(
-      "<!DOCTYPE html><html><head><title>Loading invoice…</title></head><body><p style='font-family:system-ui,sans-serif;padding:2rem;color:#444'>Loading invoice…</p></body></html>"
-    );
-
-    setBusy(`bill-${invoiceNo}`);
-    try {
-      const res = await fetch(adminApi(`/renewals/${invoiceNo}/bill`), {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        win.close();
-        setError(data.message ?? "Failed to load bill");
-        return;
-      }
-      const html = await res.text();
-      win.document.open();
-      win.document.write(html);
-      win.document.close();
-      setError("");
-    } catch {
-      win.close();
-      setError("Failed to open bill");
-    } finally {
-      setBusy(null);
-    }
+    setError("");
   };
 
   const startEdit = (row: RenewalItem) => {
@@ -629,7 +605,6 @@ export function AdminRenewalsPanel({ token }: AdminRenewalsPanelProps) {
                           <button
                             type="button"
                             className="admin-btn-ghost admin-btn-sm"
-                            disabled={busy === `bill-${row.invoiceNo}`}
                             onClick={() => openBill(row.invoiceNo)}
                           >
                             Bill
