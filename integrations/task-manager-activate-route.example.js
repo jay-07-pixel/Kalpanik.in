@@ -1,10 +1,16 @@
 /**
- * Copy into each Kalpanik Task Manager instance (Task_manager, Task_manager_acs, …).
+ * Legacy CommonJS example — prefer integrations/kalpanikActivate.js (ESM).
  *
- * 1. Add to the Express API (same app that serves /api/... routes).
- * 2. Set KALPANIK_ACTIVATION_SECRET in Task Manager .env — same value as on kalpanik.in.
- * 3. Wire COMPANY_TRIAL_END (and optional DB fields) however your app reads subscription.
- * 4. pm2 restart that instance.
+ * Install on ALL VPS instances at once:
+ *   cd ~/Kalpanik && git pull
+ *   bash integrations/install-kalpanik-activate-all.sh
+ *
+ * Or one instance (e.g. ACS):
+ *   bash integrations/install-kalpanik-activate-all.sh acs
+ *
+ * Manual copy: integrations/kalpanikActivate.js → ~/Task_manager_*/server/
+ * Wire in server/src/index.js AFTER app.use(express.json()).
+ * Set KALPANIK_ACTIVATION_SECRET in server/.env (same as ~/Kalpanik/.env).
  *
  * Kalpanik admin calls: POST {site}/api/company/subscription/activate
  * Header: X-Kalpanik-Secret
