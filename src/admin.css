@@ -840,6 +840,32 @@
   background: #f0f4f8;
 }
 
+.admin-bill-page {
+  min-height: 100vh;
+  padding: 1rem 1.25rem 2rem;
+}
+
+.admin-bill-toolbar {
+  max-width: 920px;
+  margin: 0 auto 1rem;
+}
+
+.admin-bill-back {
+  color: #0ea5e9;
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.admin-bill-back:hover {
+  text-decoration: underline;
+}
+
+.admin-bill-layout {
+  grid-template-columns: minmax(0, 1fr) !important;
+  max-width: 920px;
+  margin: 0 auto;
+}
+
 .admin-bill-status {
   margin: 0;
   padding: 2rem 1.5rem;
