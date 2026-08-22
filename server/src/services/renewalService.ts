@@ -198,16 +198,32 @@ function extractWebhookDetail(body: string): string {
   return stripped.length > 160 ? `${stripped.slice(0, 160)}…` : stripped;
 }
 
+function formatTrialEndDate(value: string | null | undefined): string {
+  if (!value?.trim()) return "—";
+  const d = new Date(value);
+  if (!Number.isNaN(d.getTime())) return d.toISOString().slice(0, 10);
+  return value.trim().slice(0, 10);
+}
+
 function manualActivationHint(renewal: RenewalRow): string {
   const folder = INSTANCE_FOLDERS[renewal.instance ?? ""] ?? renewal.instance ?? "VPS folder";
-  const extend = renewal.trial_end_extend_to ?? "—";
+  const extend = formatTrialEndDate(renewal.trial_end_extend_to);
   return `Manual: set COMPANY_TRIAL_END=${extend} on ${folder}`;
+}
+
+function normalizeActivationNote(note: string): string {
+  return note.replace(/COMPANY_TRIAL_END=([^.\n]+)/g, (full, datePart) => {
+    const formatted = formatTrialEndDate(datePart.trim());
+    return formatted === "—" ? full : `COMPANY_TRIAL_END=${formatted}`;
+  });
 }
 
 export function formatActivationNoteForDisplay(note: string | null | undefined): string | null {
   if (!note?.trim()) return null;
   const trimmed = note.trim();
-  if (!/<!DOCTYPE|<html|<pre/i.test(trimmed)) return trimmed;
+  if (!/<!DOCTYPE|<html|<pre/i.test(trimmed)) {
+    return normalizeActivationNote(trimmed);
+  }
 
   const statusMatch = trimmed.match(/Webhook (\d+)/i);
   const status = statusMatch?.[1];
@@ -218,13 +234,14 @@ export function formatActivationNoteForDisplay(note: string | null | undefined):
     : "";
 
   if (status && detail) {
-    return manual
+    const line = manual
       ? `Site error ${status}: ${detail}. ${manual}`
       : `Site error ${status}: ${detail}`;
+    return normalizeActivationNote(line);
   }
 
   const cleaned = stripHtml(trimmed);
-  return cleaned.length > 220 ? `${cleaned.slice(0, 220)}…` : cleaned;
+  return normalizeActivationNote(cleaned.length > 220 ? `${cleaned.slice(0, 220)}…` : cleaned);
 }
 
 function formatWebhookFailure(status: number, body: string, renewal: RenewalRow): string {
@@ -419,7 +436,7 @@ export async function markRenewalManualActivation(invoiceNo: string): Promise<Re
   if (!renewal) throw new Error("Renewal not found");
 
   const folder = INSTANCE_FOLDERS[renewal.instance ?? ""] ?? renewal.instance ?? "VPS folder";
-  const extend = renewal.trial_end_extend_to?.slice(0, 10) ?? "—";
+  const extend = formatTrialEndDate(renewal.trial_end_extend_to);
   const note = `Manually activated on ${folder}. COMPANY_TRIAL_END=${extend}`;
 
   await pool.execute(
