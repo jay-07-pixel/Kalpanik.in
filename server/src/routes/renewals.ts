@@ -112,10 +112,18 @@ renewalsRouter.post("/", createLimiter, async (req, res) => {
     });
   } catch (error) {
     console.error("[renewals] Create failed:", error);
+    const errMsg = error instanceof Error ? error.message : String(error);
+    let message = "Failed to create renewal.";
+    if (/Unknown column/i.test(errMsg)) {
+      message =
+        "Server database is missing invoice columns. Restart kalpanik-api after deploy, or run database/renewals-invoice-fields.sql.";
+    } else if (/ECONNREFUSED|ER_ACCESS_DENIED|ER_BAD_DB_ERROR/i.test(errMsg)) {
+      message = "Database connection failed on server.";
+    }
     return res.status(500).json({
       success: false,
       error: "SERVER_ERROR",
-      message: "Failed to create renewal.",
+      message,
     });
   }
 });

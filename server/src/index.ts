@@ -3,7 +3,8 @@ import cors from "cors";
 import helmet from "helmet";
 import path from "node:path";
 import { config } from "./config.js";
-import { verifyDatabaseConnection } from "./db/pool.js";
+import { pool, verifyDatabaseConnection } from "./db/pool.js";
+import { ensureRenewalsSchema } from "./db/ensureRenewalsSchema.js";
 import { verifySmtpConnection } from "./services/emailService.js";
 import { waitlistRouter } from "./routes/waitlist.js";
 import { adminRouter } from "./routes/admin.js";
@@ -43,6 +44,7 @@ app.use(errorHandler);
 
 async function start() {
   await verifyDatabaseConnection();
+  await ensureRenewalsSchema(pool);
   try {
     await verifySmtpConnection();
   } catch (error) {

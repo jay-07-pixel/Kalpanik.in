@@ -166,9 +166,24 @@ export function RenewPage() {
           source,
         }),
       });
-      const data = await res.json();
+      const raw = await res.text();
+      let data: { success?: boolean; message?: string; data?: RenewalData; payment?: { upiUri: string; upiId: string } };
+      try {
+        data = JSON.parse(raw) as typeof data;
+      } catch {
+        setError(
+          res.ok
+            ? "Invalid response from server."
+            : `Server error (${res.status}). Check that kalpanik-api is running.`
+        );
+        return;
+      }
       if (!res.ok || !data.success) {
-        setError(data.message ?? "Failed to create invoice.");
+        setError(data.message ?? `Failed to create invoice (${res.status}).`);
+        return;
+      }
+      if (!data.data || !data.payment) {
+        setError("Incomplete response from server.");
         return;
       }
       setRenewal(data.data);
