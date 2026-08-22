@@ -6,6 +6,7 @@ import {
   calcTaxableInr,
   extendTrialEnd,
   isPlanId,
+  TEST_FLAT_BILL_INR,
   type PlanId,
   INSTANCE_FOLDERS,
 } from "../constants/pricing.js";
@@ -417,13 +418,14 @@ export function serializeRenewal(row: RenewalRow) {
   const taxableInr = calcTaxableInr(row.plan, row.users, row.months, row.extra_gb);
   const grandTotalInr = calcGrandTotalInr(row.plan, row.users, row.months, row.extra_gb);
   const stored = Number(row.amount_inr);
-  // Legacy rows stored pre-GST taxable; display/charge amount matches invoice grand total.
   const amountInr =
-    Math.abs(stored - grandTotalInr) < 0.02
-      ? stored
-      : Math.abs(stored - taxableInr) < 0.02
-        ? grandTotalInr
-        : stored;
+    TEST_FLAT_BILL_INR > 0
+      ? TEST_FLAT_BILL_INR
+      : Math.abs(stored - grandTotalInr) < 0.02
+        ? stored
+        : Math.abs(stored - taxableInr) < 0.02
+          ? grandTotalInr
+          : stored;
 
   return {
     id: row.id,

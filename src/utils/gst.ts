@@ -3,6 +3,7 @@ import {
   EXTRA_STORAGE_PRICE_PER_GB,
   PLANS,
   SPECIAL_DISCOUNT_PERCENT,
+  TEST_FLAT_BILL_INR,
   type PlanId,
 } from "../constants/pricing";
 
@@ -26,6 +27,7 @@ export function calcTaxableInr(
   months: number,
   extraGb: number
 ): number {
+  if (TEST_FLAT_BILL_INR > 0) return TEST_FLAT_BILL_INR;
   const u = Math.max(1, Math.floor(users));
   const m = Math.max(1, Math.floor(months));
   const g = Math.max(0, Math.floor(extraGb));
@@ -45,6 +47,15 @@ export function calcListInr(
 }
 
 export function calcGstBreakdown(taxable: number) {
+  if (TEST_FLAT_BILL_INR > 0) {
+    return {
+      taxable: TEST_FLAT_BILL_INR,
+      cgst: 0,
+      sgst: 0,
+      totalTax: 0,
+      grandTotal: TEST_FLAT_BILL_INR,
+    };
+  }
   const cgst = round2(taxable * CGST_RATE);
   const sgst = round2(taxable * SGST_RATE);
   const totalTax = round2(cgst + sgst);
@@ -72,6 +83,20 @@ export function buildInvoiceLines(
   const m = Math.max(1, Math.floor(months));
   const g = Math.max(0, Math.floor(extraGb));
   const interval = intervalLabel || `${m} month${m > 1 ? "s" : ""}`;
+
+  if (TEST_FLAT_BILL_INR > 0) {
+    return [
+      {
+        subscription: `Kalpanik ${PLANS[plan].name}`,
+        description: "Subscription (test billing)",
+        interval,
+        qty: u,
+        amount: TEST_FLAT_BILL_INR,
+        hsn: DEFAULT_SAC,
+      },
+    ];
+  }
+
   const listPlan = PLANS[plan].listPricePerUser * u * m;
   const netPlan = PLANS[plan].pricePerUser * u * m;
   const planDiscount = listPlan - netPlan;

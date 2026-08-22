@@ -1,5 +1,8 @@
 export type PlanId = "task_management" | "task_attendance";
 
+/** TEST: set to 0 to use real pricing. Flat total charged on every invoice. */
+export const TEST_FLAT_BILL_INR = 1;
+
 /** TEST pricing — restore 299/349 and storage 100 for production */
 export const EXTRA_STORAGE_PRICE_PER_GB = 1;
 
@@ -33,6 +36,7 @@ export function calcTaxableInr(
   months: number,
   extraGb: number
 ): number {
+  if (TEST_FLAT_BILL_INR > 0) return TEST_FLAT_BILL_INR;
   const planPrice = PLAN_PRICES[plan] ?? 0;
   const u = Math.max(1, Math.floor(users));
   const m = Math.max(1, Math.floor(months));
@@ -47,6 +51,7 @@ export function calcGrandTotalInr(
   months: number,
   extraGb: number
 ): number {
+  if (TEST_FLAT_BILL_INR > 0) return TEST_FLAT_BILL_INR;
   const taxable = calcTaxableInr(plan, users, months, extraGb);
   return Math.round((taxable * 1.18 + Number.EPSILON) * 100) / 100;
 }

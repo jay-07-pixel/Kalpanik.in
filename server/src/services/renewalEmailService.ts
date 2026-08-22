@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { config } from "../config.js";
-import { PLAN_NAMES, calcGrandTotalInr, calcTaxableInr, type PlanId } from "../constants/pricing.js";
+import { PLAN_NAMES, TEST_FLAT_BILL_INR, calcGrandTotalInr, calcTaxableInr, type PlanId } from "../constants/pricing.js";
 import { sendMail } from "./emailService.js";
 import type { RenewalRow } from "./renewalService.js";
 
@@ -15,6 +15,16 @@ function stateCodeFromGstin(gstin: string | null): string {
 }
 
 function gstBreakdown(taxable: number, useIgst: boolean) {
+  if (TEST_FLAT_BILL_INR > 0) {
+    return {
+      taxable: TEST_FLAT_BILL_INR,
+      cgst: 0,
+      sgst: 0,
+      totalTax: 0,
+      grandTotal: TEST_FLAT_BILL_INR,
+      useIgst,
+    };
+  }
   const cgst = Math.round(taxable * 0.09 * 100) / 100;
   const sgst = Math.round(taxable * 0.09 * 100) / 100;
   const totalTax = useIgst ? Math.round(taxable * 0.18 * 100) / 100 : cgst + sgst;
