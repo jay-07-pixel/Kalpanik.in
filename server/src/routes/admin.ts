@@ -4,10 +4,12 @@ import { issueAdminToken, validateAdminCredentials } from "../services/authServi
 import { getDashboardStats } from "../services/analyticsService.js";
 import { requireAdmin, type AuthenticatedRequest } from "../middleware/requireAdmin.js";
 import {
+  getRenewalByInvoice,
   listRenewals,
   markRenewalPaid,
   serializeRenewal,
 } from "../services/renewalService.js";
+import { buildRenewalBillDocument } from "../services/renewalEmailService.js";
 import { INSTANCE_FOLDERS } from "../constants/pricing.js";
 
 export const adminRouter = Router();
@@ -88,6 +90,42 @@ adminRouter.get("/renewals", requireAdmin, async (req, res) => {
       success: false,
       error: "SERVER_ERROR",
       message: "Failed to load renewals.",
+    });
+  }
+});
+
+adminRouter.get("/renewals/:invoiceNo/bill", requireAdmin, async (req, res) => {
+  try {
+    const invoiceNo = String(req.params.invoiceNo);
+    const renewal = await getRenewalByInvoice(invoiceNo);
+    if (!renewal) {
+      return res.status(404).json({
+        success: false,
+        error: "NOT_FOUND",
+        message: "Invoice not found.",
+      });
+    }
+    if (!renewal.utr?.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: "NO_PROOF",
+        message: "Customer has not submitted payment proof yet.",
+      });
+    }
+
+    const html = buildRenewalBillDocument(renewal);
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      `inline; filename="${invoiceNo}.html"`
+    );
+    return res.send(html);
+  } catch (error) {
+    console.error("[admin] Bill download failed:", error);
+    return res.status(500).json({
+      success: false,
+      error: "SERVER_ERROR",
+      message: "Failed to generate bill.",
     });
   }
 });

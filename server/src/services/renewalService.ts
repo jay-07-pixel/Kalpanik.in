@@ -159,15 +159,22 @@ export async function submitPaymentProof(
 }
 
 export async function listRenewals(status?: string): Promise<RenewalRow[]> {
-  if (status) {
+  const proofOnly = "utr IS NOT NULL AND TRIM(utr) <> ''";
+
+  if (status === "pending" || status === "submitted") {
     const [rows] = await pool.query<RenewalRow[]>(
-      "SELECT * FROM renewals WHERE status = ? ORDER BY created_at DESC LIMIT 200",
-      [status]
+      `SELECT * FROM renewals WHERE status = 'pending' AND ${proofOnly} ORDER BY updated_at DESC LIMIT 200`
+    );
+    return rows;
+  }
+  if (status === "paid") {
+    const [rows] = await pool.query<RenewalRow[]>(
+      "SELECT * FROM renewals WHERE status = 'paid' ORDER BY paid_at DESC, created_at DESC LIMIT 200"
     );
     return rows;
   }
   const [rows] = await pool.query<RenewalRow[]>(
-    "SELECT * FROM renewals ORDER BY created_at DESC LIMIT 200"
+    `SELECT * FROM renewals WHERE ${proofOnly} ORDER BY created_at DESC LIMIT 200`
   );
   return rows;
 }

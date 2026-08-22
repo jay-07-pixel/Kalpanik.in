@@ -15,6 +15,7 @@ interface RenewalItem {
   site: string | null;
   status: string;
   utr: string | null;
+  screenshotPath: string | null;
   trialEndExtendTo: string | null;
   activationNote: string | null;
   activationStatus: string | null;
@@ -26,16 +27,18 @@ interface AdminRenewalsPanelProps {
   token: string;
 }
 
+type RenewalFilter = "submitted" | "paid" | "all";
+
 export function AdminRenewalsPanel({ token }: AdminRenewalsPanelProps) {
   const [rows, setRows] = useState<RenewalItem[]>([]);
-  const [filter, setFilter] = useState<"pending" | "paid" | "all">("pending");
+  const [filter, setFilter] = useState<RenewalFilter>("submitted");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const [folders, setFolders] = useState<Record<string, string>>({});
 
   const load = useCallback(() => {
-    const qs = filter === "all" ? "" : `?status=${filter}`;
-    fetch(adminApi(`/renewals${qs}`), {
+    const statusParam = filter === "submitted" ? "submitted" : filter;
+    fetch(adminApi(`/renewals?status=${statusParam}`), {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((r) => r.json())
@@ -78,6 +81,34 @@ export function AdminRenewalsPanel({ token }: AdminRenewalsPanelProps) {
     }
   };
 
+  const openBill = async (invoiceNo: string) => {
+    setBusy(`bill-${invoiceNo}`);
+    try {
+      const res = await fetch(adminApi(`/renewals/${invoiceNo}/bill`), {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.message ?? "Failed to load bill");
+        return;
+      }
+      const html = await res.text();
+      const win = window.open("", "_blank", "noopener,noreferrer,width=920,height=1200");
+      if (!win) {
+        setError("Pop-up blocked. Allow pop-ups to view the bill.");
+        return;
+      }
+      win.document.open();
+      win.document.write(html);
+      win.document.close();
+      setError("");
+    } catch {
+      setError("Failed to open bill");
+    } finally {
+      setBusy(null);
+    }
+  };
+
   return (
     <section className="admin-section admin-renewals">
       <div className="admin-header" style={{ marginBottom: "1rem", border: "none", padding: 0 }}>
@@ -85,24 +116,34 @@ export function AdminRenewalsPanel({ token }: AdminRenewalsPanelProps) {
           Subscription Renewals
         </h2>
         <div className="admin-header-actions">
-          {(["pending", "paid", "all"] as const).map((f) => (
+          {(
+            [
+              ["submitted", "Submitted"],
+              ["paid", "Paid"],
+              ["all", "All submitted"],
+            ] as const
+          ).map(([f, label]) => (
             <button
               key={f}
               type="button"
               className={filter === f ? "admin-btn-primary" : "admin-btn-ghost"}
               onClick={() => setFilter(f)}
             >
-              {f}
+              {label}
             </button>
           ))}
         </div>
       </div>
 
+      <p className="admin-renewals-hint">
+        Only customers who submitted UTR / payment proof appear here.
+      </p>
+
       {error && <p className="admin-error-banner">{error}</p>}
 
       <div className="admin-chart-card" style={{ overflowX: "auto" }}>
         {rows.length === 0 ? (
-          <p className="admin-empty">No renewals in this filter.</p>
+          <p className="admin-empty">No submitted renewals in this filter.</p>
         ) : (
           <table className="admin-renewals-table">
             <thead>
@@ -135,7 +176,16 @@ export function AdminRenewalsPanel({ token }: AdminRenewalsPanelProps) {
                     </div>
                   </td>
                   <td>₹{row.amountInr.toLocaleString("en-IN")}</td>
-                  <td>{row.utr || "—"}</td>
+                  <td>
+                    <strong>{row.utr}</strong>
+                    {row.screenshotPath && (
+                      <div className="muted">
+                        <a href={row.screenshotPath} target="_blank" rel="noreferrer">
+                          View screenshot
+                        </a>
+                      </div>
+                    )}
+                  </td>
                   <td>
                     {row.instance || "—"}
                     <div className="muted">
@@ -147,18 +197,28 @@ export function AdminRenewalsPanel({ token }: AdminRenewalsPanelProps) {
                     {row.activationNote && <div className="muted">{row.activationNote}</div>}
                   </td>
                   <td>
-                    {row.status !== "paid" ? (
+                    <div className="admin-renewals-actions">
                       <button
                         type="button"
-                        className="admin-btn-primary"
-                        disabled={busy === row.invoiceNo}
-                        onClick={() => markPaid(row.invoiceNo)}
+                        className="admin-btn-ghost"
+                        disabled={busy === `bill-${row.invoiceNo}`}
+                        onClick={() => openBill(row.invoiceNo)}
                       >
-                        {busy === row.invoiceNo ? "…" : "Mark Paid"}
+                        {busy === `bill-${row.invoiceNo}` ? "…" : "Download Bill"}
                       </button>
-                    ) : (
-                      <span className="muted">{row.activationStatus}</span>
-                    )}
+                      {row.status !== "paid" ? (
+                        <button
+                          type="button"
+                          className="admin-btn-primary"
+                          disabled={busy === row.invoiceNo}
+                          onClick={() => markPaid(row.invoiceNo)}
+                        >
+                          {busy === row.invoiceNo ? "…" : "Mark Paid"}
+                        </button>
+                      ) : (
+                        <span className="muted">{row.activationStatus}</span>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}

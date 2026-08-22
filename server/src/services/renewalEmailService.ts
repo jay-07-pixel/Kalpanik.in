@@ -22,13 +22,16 @@ function gstBreakdown(taxable: number, useIgst: boolean) {
   return { taxable, cgst, sgst, totalTax, grandTotal, useIgst };
 }
 
-function buildRenewalEmailHtml(renewal: RenewalRow, utr: string): string {
+function buildRenewalBillHtml(renewal: RenewalRow, utr?: string | null): string {
   const seller = config.invoice;
   const taxable = calcTaxableInr(renewal.plan, renewal.users, renewal.months, renewal.extra_gb);
   const sellerCode = seller.stateCode || stateCodeFromGstin(seller.gstin) || "27";
   const buyerCode = renewal.buyer_state_code || stateCodeFromGstin(renewal.gstin);
   const gst = gstBreakdown(taxable, Boolean(buyerCode && sellerCode !== buyerCode));
   const planName = PLAN_NAMES[renewal.plan as PlanId] ?? renewal.plan;
+  const utrLine = utr || renewal.utr
+    ? `<p style="margin:0 0 20px;color:#5f6368;">UTR: <strong>${utr || renewal.utr}</strong></p>`
+    : "";
 
   const taxRows = gst.useIgst
     ? `<tr><td style="padding:6px 0;">Integrated GST (18%)</td><td style="text-align:right;">₹${fmt(gst.totalTax)}</td></tr>`
@@ -37,65 +40,75 @@ function buildRenewalEmailHtml(renewal: RenewalRow, utr: string): string {
 
   return `<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8" /><title>Invoice ${renewal.invoice_no}</title></head>
-<body style="margin:0;padding:0;background:#f0f4f8;font-family:Arial,sans-serif;color:#202124;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="padding:24px 12px;">
-    <tr><td align="center">
-      <table role="presentation" width="100%" style="max-width:640px;background:#fff;border-radius:12px;padding:28px 24px;">
-        <tr><td>
-          <p style="margin:0 0 6px;font-size:12px;color:#0ea5e9;text-transform:uppercase;letter-spacing:0.15em;">Kalpanik</p>
-          <h1 style="margin:0 0 16px;font-size:22px;">Tax Invoice — ${renewal.invoice_no}</h1>
-          <p style="margin:0 0 20px;color:#5f6368;line-height:1.6;">
-            Payment proof received. UTR: <strong>${utr}</strong>
-          </p>
-
-          <h2 style="font-size:16px;margin:24px 0 8px;border-bottom:1px solid #e8eaed;padding-bottom:6px;">Seller</h2>
-          <p style="margin:0;line-height:1.6;">
-            <strong>${seller.legalName}</strong><br />
-            ${seller.address}<br />
-            GSTIN: ${seller.gstin || "—"}<br />
-            ${seller.phone ? `Phone: ${seller.phone}<br />` : ""}
-            Email: ${seller.email}
-          </p>
-
-          <h2 style="font-size:16px;margin:24px 0 8px;border-bottom:1px solid #e8eaed;padding-bottom:6px;">Company (Bill to)</h2>
-          <p style="margin:0;line-height:1.6;">
-            <strong>${renewal.company}</strong><br />
-            ${renewal.contact_person ? `${renewal.contact_person}<br />` : ""}
-            ${renewal.billing_address || "—"}<br />
-            ${renewal.gstin ? `GSTIN: ${renewal.gstin}<br />` : ""}
-            ${renewal.buyer_state ? `State: ${renewal.buyer_state}${renewal.buyer_state_code ? ` (${renewal.buyer_state_code})` : ""}<br />` : ""}
-            Email: ${renewal.email}<br />
-            ${renewal.phone ? `Phone: ${renewal.phone}` : ""}
-          </p>
-
-          <h2 style="font-size:16px;margin:24px 0 8px;border-bottom:1px solid #e8eaed;padding-bottom:6px;">Subscription</h2>
-          <table width="100%" style="font-size:14px;line-height:1.7;">
-            <tr><td>Plan</td><td style="text-align:right;"><strong>Kalpanik ${planName}</strong></td></tr>
-            <tr><td>Users</td><td style="text-align:right;">${renewal.users}</td></tr>
-            <tr><td>Duration</td><td style="text-align:right;">${renewal.months} month(s)</td></tr>
-            ${renewal.extra_gb > 0 ? `<tr><td>Extra storage</td><td style="text-align:right;">${renewal.extra_gb} GB</td></tr>` : ""}
-            ${renewal.instance ? `<tr><td>Instance</td><td style="text-align:right;">${renewal.instance}</td></tr>` : ""}
-            ${renewal.site ? `<tr><td>Site</td><td style="text-align:right;">${renewal.site}</td></tr>` : ""}
-            ${renewal.trial_end_extend_to ? `<tr><td>Extend to</td><td style="text-align:right;">${renewal.trial_end_extend_to}</td></tr>` : ""}
-          </table>
-
-          <h2 style="font-size:16px;margin:24px 0 8px;border-bottom:1px solid #e8eaed;padding-bottom:6px;">Bill summary</h2>
-          <table width="100%" style="font-size:14px;">
-            <tr><td style="padding:6px 0;">Subtotal (taxable)</td><td style="text-align:right;">₹${fmt(gst.taxable)}</td></tr>
-            ${taxRows}
-            <tr><td style="padding:10px 0;font-weight:700;font-size:16px;">Total</td><td style="text-align:right;font-weight:700;font-size:16px;">₹${fmt(gst.grandTotal)}</td></tr>
-          </table>
-
-          <p style="margin:24px 0 0;font-size:13px;color:#80868b;">
-            Status: Pending verification. We will activate your subscription after confirming payment.
-          </p>
-        </td></tr>
-      </table>
-    </td></tr>
-  </table>
+<head>
+  <meta charset="UTF-8" />
+  <title>Invoice ${renewal.invoice_no}</title>
+  <style>
+    @media print { .no-print { display: none !important; } body { background: #fff; } }
+    body { margin: 0; padding: 24px; font-family: Arial, sans-serif; color: #202124; background: #f0f4f8; }
+    .bill { max-width: 720px; margin: 0 auto; background: #fff; border-radius: 12px; padding: 28px 24px; }
+    h1 { margin: 0 0 8px; font-size: 22px; }
+    h2 { font-size: 16px; margin: 24px 0 8px; border-bottom: 1px solid #e8eaed; padding-bottom: 6px; }
+    table { width: 100%; font-size: 14px; border-collapse: collapse; }
+    .actions { margin-bottom: 16px; }
+    .btn { background: #0ea5e9; color: #fff; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="bill">
+    <div class="actions no-print">
+      <button class="btn" onclick="window.print()">Print / Save PDF</button>
+    </div>
+    <p style="margin:0 0 6px;font-size:12px;color:#0ea5e9;text-transform:uppercase;letter-spacing:0.15em;">Kalpanik</p>
+    <h1>Tax Invoice — ${renewal.invoice_no}</h1>
+    ${utrLine}
+    <h2>Seller</h2>
+    <p style="margin:0;line-height:1.6;">
+      <strong>${seller.legalName}</strong><br />
+      ${seller.address}<br />
+      GSTIN: ${seller.gstin || "—"}<br />
+      ${seller.pan ? `PAN: ${seller.pan}<br />` : ""}
+      ${seller.udyam ? `UDYAM: ${seller.udyam}<br />` : ""}
+      ${seller.phone ? `Phone: ${seller.phone}<br />` : ""}
+      Email: ${seller.email}
+    </p>
+    <h2>Company (Bill to)</h2>
+    <p style="margin:0;line-height:1.6;">
+      <strong>${renewal.company}</strong><br />
+      ${renewal.contact_person ? `${renewal.contact_person}<br />` : ""}
+      ${renewal.billing_address || "—"}<br />
+      ${renewal.gstin ? `GSTIN: ${renewal.gstin}<br />` : ""}
+      ${renewal.buyer_state ? `State: ${renewal.buyer_state}${renewal.buyer_state_code ? ` (${renewal.buyer_state_code})` : ""}<br />` : ""}
+      Email: ${renewal.email}<br />
+      ${renewal.phone ? `Phone: ${renewal.phone}` : ""}
+    </p>
+    <h2>Subscription</h2>
+    <table>
+      <tr><td>Plan</td><td style="text-align:right;"><strong>Kalpanik ${planName}</strong></td></tr>
+      <tr><td>Users</td><td style="text-align:right;">${renewal.users}</td></tr>
+      <tr><td>Duration</td><td style="text-align:right;">${renewal.months} month(s)</td></tr>
+      ${renewal.extra_gb > 0 ? `<tr><td>Extra storage</td><td style="text-align:right;">${renewal.extra_gb} GB</td></tr>` : ""}
+      ${renewal.instance ? `<tr><td>Instance</td><td style="text-align:right;">${renewal.instance}</td></tr>` : ""}
+      ${renewal.site ? `<tr><td>Site</td><td style="text-align:right;">${renewal.site}</td></tr>` : ""}
+      ${renewal.trial_end_extend_to ? `<tr><td>Extend to</td><td style="text-align:right;">${renewal.trial_end_extend_to}</td></tr>` : ""}
+    </table>
+    <h2>Bill summary</h2>
+    <table>
+      <tr><td style="padding:6px 0;">Subtotal (taxable)</td><td style="text-align:right;">₹${fmt(gst.taxable)}</td></tr>
+      ${taxRows}
+      <tr><td style="padding:10px 0;font-weight:700;font-size:16px;">Total</td><td style="text-align:right;font-weight:700;font-size:16px;">₹${fmt(gst.grandTotal)}</td></tr>
+    </table>
+    <p style="margin:24px 0 0;font-size:13px;color:#80868b;">Status: ${renewal.status}</p>
+  </div>
 </body>
 </html>`;
+}
+
+function buildRenewalEmailHtml(renewal: RenewalRow, utr: string): string {
+  return buildRenewalBillHtml(renewal, utr).replace(
+    '<div class="actions no-print">',
+    '<div class="actions no-print" style="display:none">'
+  );
 }
 
 function buildPlainText(renewal: RenewalRow, utr: string): string {
@@ -121,6 +134,10 @@ function buildPlainText(renewal: RenewalRow, utr: string): string {
   ]
     .filter(Boolean)
     .join("\n");
+}
+
+export function buildRenewalBillDocument(renewal: RenewalRow): string {
+  return buildRenewalBillHtml(renewal);
 }
 
 export async function sendRenewalProofEmails(
