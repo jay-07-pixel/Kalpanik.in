@@ -75,20 +75,54 @@ install_instance() {
   cp "$ACTIVATE_SRC" "$server_dir/kalpanikActivate.js"
   echo "Copied kalpanikActivate.js"
 
-  if [[ -f "$server_dir/.env" ]]; then
-    upsert_env_secret "$server_dir/.env"
-  else
-    upsert_env_secret "$root/.env"
+  local env_file="$server_dir/.env"
+  if [[ ! -f "$env_file" ]]; then
+    env_file="$root/.env"
   fi
-  echo "Set KALPANIK_ACTIVATION_SECRET"
+  upsert_env_secret "$env_file"
+  echo "Set KALPANIK_ACTIVATION_SECRET in $env_file"
 
   node "$PATCH_SCRIPT" "$index_js"
 
-  if pm2 describe "$pm2_name" >/dev/null 2>&1; then
-    pm2 restart "$pm2_name" --update-env
-    echo "Restarted pm2:$pm2_name (wait ~30s for npm build if applicable)"
-  else
+  if ! pm2 describe "$pm2_name" >/dev/null 2>&1; then
     echo "WARN: pm2 process '$pm2_name' not found — restart manually"
+    return 0
+  fi
+
+  pm2 restart "$pm2_name" --update-env
+  echo "Restarted pm2:$pm2_name — waiting for API (up to 90s)..."
+
+  local port="3000"
+  if [[ -f "$env_file" ]]; then
+    port="$(grep -E '^PORT=' "$env_file" | head -1 | cut -d= -f2- | tr -d ' "' || true)"
+    port="${port:-3000}"
+  fi
+
+  local ready=0
+  for _ in $(seq 1 18); do
+    sleep 5
+    if pm2 logs "$pm2_name" --lines 40 --nostream 2>/dev/null | grep -q "API listening"; then
+      ready=1
+      break
+    fi
+  done
+
+  if [[ "$ready" -eq 1 ]]; then
+    echo "API up on port $port"
+    local test_body='{"trialEndExtendTo":"2026-12-31","invoiceNo":"INSTALL-TEST"}'
+    local test_res
+    test_res="$(curl -sS -m 10 -X POST "http://127.0.0.1:${port}/api/company/subscription/activate" \
+      -H "Content-Type: application/json" \
+      -H "X-Kalpanik-Secret: $SECRET" \
+      -d "$test_body" 2>&1 || true)"
+    if echo "$test_res" | grep -q '"ok":true'; then
+      echo "OK: localhost activate test passed"
+    else
+      echo "WARN: localhost test on :$port returned: $test_res"
+      echo "      Check registerKalpanikSubscriptionActivate is AFTER express.json() in index.js"
+    fi
+  else
+    echo "WARN: timed out waiting for 'API listening' — check: pm2 logs $pm2_name --lines 40"
   fi
 }
 
@@ -105,10 +139,6 @@ else
 fi
 
 echo ""
-echo "Done. After each restart shows 'API listening', test e.g.:"
-echo "  curl -X POST http://localhost:3000/api/company/subscription/activate \\"
-echo "    -H 'Content-Type: application/json' \\"
-echo "    -H 'X-Kalpanik-Secret: $SECRET' \\"
-echo "    -d '{\"trialEndExtendTo\":\"2026-12-31\",\"invoiceNo\":\"TEST\"}'"
-echo ""
-echo "Then use Kalpanik admin → Save & sync to site for each invoice."
+echo "Done. Test via domain only after localhost OK."
+echo "Find each instance port: grep ^PORT= ~/Task_manager_*/server/.env"
+echo "Then Kalpanik admin → Save & sync to site for each invoice."
