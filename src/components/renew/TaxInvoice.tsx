@@ -174,9 +174,7 @@ export function TaxInvoice({
           <div className="gi-header-right">
             {paymentQrUrl ? (
               <img src={paymentQrUrl} alt="UPI payment QR" className="gi-qr" />
-            ) : (
-              <div className="gi-qr gi-qr--placeholder" aria-hidden="true" />
-            )}
+            ) : null}
           </div>
         </header>
 
@@ -327,7 +325,7 @@ export function TaxInvoice({
           <div className="gi-seal-block">
             <p className="gi-seal-for">for {seller.legalName.toUpperCase()}</p>
             <img
-              src="/seal-signature.png"
+              src="/seal-signature.png?v=1"
               alt={`${seller.legalName} seal`}
               className="gi-seal-img"
             />
