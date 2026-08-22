@@ -39,12 +39,15 @@ function formatDateTime(value: string): string {
   });
 }
 
+type AdminTab = "companies" | "renewals";
+
 export function AdminDashboard() {
   const navigate = useNavigate();
   const { token, isAuthenticated, isLoading, logout } = useAdminAuth();
   const [stats, setStats] = useState<DashboardData | null>(null);
   const [error, setError] = useState("");
   const [loadingStats, setLoadingStats] = useState(true);
+  const [tab, setTab] = useState<AdminTab>("companies");
 
   useEffect(() => {
     if (isLoading) return;
@@ -131,9 +134,29 @@ export function AdminDashboard() {
 
       {error && <p className="admin-error-banner">{error}</p>}
 
-      {token && <AdminCompaniesPanel token={token} />}
+      {token && (
+        <div className="admin-operations">
+          <nav className="admin-tabs" aria-label="Operations">
+            <button
+              type="button"
+              className={`admin-tab${tab === "companies" ? " admin-tab--active" : ""}`}
+              onClick={() => setTab("companies")}
+            >
+              Companies
+            </button>
+            <button
+              type="button"
+              className={`admin-tab${tab === "renewals" ? " admin-tab--active" : ""}`}
+              onClick={() => setTab("renewals")}
+            >
+              Subscriptions & renewals
+            </button>
+          </nav>
 
-      {token && <AdminRenewalsPanel token={token} />}
+          {tab === "companies" && <AdminCompaniesPanel token={token} />}
+          {tab === "renewals" && <AdminRenewalsPanel token={token} />}
+        </div>
+      )}
 
       {stats && (
         <>
