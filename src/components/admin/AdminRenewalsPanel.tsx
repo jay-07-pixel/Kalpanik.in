@@ -399,6 +399,17 @@ export function AdminRenewalsPanel({ token }: AdminRenewalsPanelProps) {
   };
 
   const openBill = async (invoiceNo: string) => {
+    // Open synchronously on click — noopener would return null and leave about:blank.
+    const win = window.open("", "_blank", "noreferrer,width=920,height=1200");
+    if (!win) {
+      setError("Pop-up blocked. Allow pop-ups to view the bill.");
+      return;
+    }
+    win.opener = null;
+    win.document.write(
+      "<!DOCTYPE html><html><head><title>Loading invoice…</title></head><body><p style='font-family:system-ui,sans-serif;padding:2rem;color:#444'>Loading invoice…</p></body></html>"
+    );
+
     setBusy(`bill-${invoiceNo}`);
     try {
       const res = await fetch(adminApi(`/renewals/${invoiceNo}/bill`), {
@@ -406,20 +417,17 @@ export function AdminRenewalsPanel({ token }: AdminRenewalsPanelProps) {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
+        win.close();
         setError(data.message ?? "Failed to load bill");
         return;
       }
       const html = await res.text();
-      const win = window.open("", "_blank", "noopener,noreferrer,width=920,height=1200");
-      if (!win) {
-        setError("Pop-up blocked. Allow pop-ups to view the bill.");
-        return;
-      }
       win.document.open();
       win.document.write(html);
       win.document.close();
       setError("");
     } catch {
+      win.close();
       setError("Failed to open bill");
     } finally {
       setBusy(null);

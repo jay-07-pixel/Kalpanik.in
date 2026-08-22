@@ -246,11 +246,12 @@ export function RenewPage() {
       return;
     }
 
-    const win = window.open("", "_blank", "noopener,noreferrer,width=920,height=1200");
+    const win = window.open("", "_blank", "noreferrer,width=920,height=1200");
     if (!win) {
       window.print();
       return;
     }
+    win.opener = null;
 
     const clone = invoice.cloneNode(true) as HTMLElement;
     clone.querySelectorAll("img").forEach((img) => {
