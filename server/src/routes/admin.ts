@@ -14,6 +14,7 @@ import {
 } from "../services/renewalService.js";
 import { INSTANCE_FOLDERS, isPlanId } from "../constants/pricing.js";
 import { buildRenewalBillDocument } from "../services/renewalEmailService.js";
+import { getCompaniesOverview } from "../services/companyOverviewService.js";
 
 export const adminRouter = Router();
 
@@ -74,6 +75,20 @@ adminRouter.get("/stats", requireAdmin, async (_req, res) => {
       success: false,
       error: "SERVER_ERROR",
       message: "Failed to load dashboard stats.",
+    });
+  }
+});
+
+adminRouter.get("/companies", requireAdmin, async (_req, res) => {
+  try {
+    const data = await getCompaniesOverview();
+    return res.json({ success: true, data });
+  } catch (error) {
+    console.error("[admin] Companies overview failed:", error);
+    return res.status(500).json({
+      success: false,
+      error: "SERVER_ERROR",
+      message: "Failed to load companies.",
     });
   }
 });

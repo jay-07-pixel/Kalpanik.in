@@ -23,11 +23,36 @@ function upsertEnvLine(envText, key, value) {
 }
 
 export function registerKalpanikSubscriptionActivate(app) {
-  app.post("/api/company/subscription/activate", async (req, res) => {
+  function checkSecret(req, res) {
     const secret = process.env.KALPANIK_ACTIVATION_SECRET;
     if (!secret || req.headers["x-kalpanik-secret"] !== secret) {
-      return res.status(401).json({ ok: false, error: "Unauthorized" });
+      res.status(401).json({ ok: false, error: "Unauthorized" });
+      return false;
     }
+    return true;
+  }
+
+  app.get("/api/company/subscription/status", (req, res) => {
+    if (!checkSecret(req, res)) return;
+
+    const trialEnd = process.env.COMPANY_TRIAL_END?.trim()?.slice(0, 10) || null;
+    const plan = process.env.COMPANY_PLAN?.trim() || null;
+    const maxUsers = process.env.COMPANY_MAX_USERS?.trim() || null;
+    const employeeCount = process.env.COMPANY_EMPLOYEE_COUNT?.trim() || null;
+    const storageUsedGb = process.env.COMPANY_STORAGE_USED_GB?.trim() || null;
+
+    return res.json({
+      ok: true,
+      trialEnd,
+      plan,
+      maxUsers: maxUsers ? Number(maxUsers) : null,
+      employeeCount: employeeCount ? Number(employeeCount) : null,
+      storageUsedGb: storageUsedGb ? Number(storageUsedGb) : null,
+    });
+  });
+
+  app.post("/api/company/subscription/activate", async (req, res) => {
+    if (!checkSecret(req, res)) return;
 
     const {
       instance,

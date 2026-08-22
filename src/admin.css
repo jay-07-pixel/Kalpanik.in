@@ -880,3 +880,19 @@
 .admin-bill-status a {
   color: #0ea5e9;
 }
+
+.admin-companies-table-wrap {
+  margin-top: 0.5rem;
+}
+
+.admin-companies-table th,
+.admin-companies-table td {
+  vertical-align: top;
+}
+
+.admin-companies-live-warn {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.72rem;
+  color: #fbbf24;
+}
