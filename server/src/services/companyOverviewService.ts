@@ -136,3 +136,111 @@ export async function getCompaniesOverview(): Promise<CompanyOverviewRow[]> {
 
   return entries.sort((a, b) => a.company.localeCompare(b.company));
 }
+
+async function pushSubscriptionDateToSite(input: {
+  site: string;
+  instance: string;
+  subscriptionEnd: string;
+  plan?: string | null;
+  users?: number | null;
+  invoiceNo?: string | null;
+}): Promise<{ ok: boolean; note: string }> {
+  const site = input.site.replace(/\/$/, "");
+  const url = `${site}/api/company/subscription/activate`;
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Kalpanik-Secret": config.activation.secret,
+      },
+      body: JSON.stringify({
+        instance: input.instance,
+        invoiceNo: input.invoiceNo ?? `ADMIN-${input.instance}`,
+        plan: input.plan,
+        users: input.users,
+        trialEndExtendTo: input.subscriptionEnd,
+      }),
+      signal: AbortSignal.timeout(12000),
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      return {
+        ok: false,
+        note: text.slice(0, 160) || `Site error ${res.status}`,
+      };
+    }
+    return { ok: true, note: `Synced to ${site}` };
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : "Connection failed";
+    return { ok: false, note: msg };
+  }
+}
+
+/** Update subscription end date for a company instance (DB + optional site sync). */
+export async function updateCompanySubscriptionDate(
+  instance: string,
+  subscriptionEnd: string,
+  syncToSite = true
+): Promise<{
+  company: CompanyOverviewRow;
+  sync: { ok: boolean; note: string };
+}> {
+  const meta = COMPANY_REGISTRY[instance];
+  if (!meta) throw new Error("Unknown company instance");
+
+  const endDate = subscriptionEnd.trim().slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(endDate)) {
+    throw new Error("Invalid date. Use YYYY-MM-DD.");
+  }
+
+  const renewals = await getLatestRenewalPerInstance();
+  const renewal = renewals.get(instance);
+  const site = (renewal?.site?.trim() || meta.defaultSite).replace(/\/$/, "");
+
+  if (renewal) {
+    await pool.execute(
+      `UPDATE renewals SET trial_end_extend_to = ?, updated_at = NOW() WHERE invoice_no = ?`,
+      [endDate, renewal.invoice_no]
+    );
+  }
+
+  let sync: { ok: boolean; note: string } = {
+    ok: true,
+    note: "Saved on Kalpanik (not pushed to site)",
+  };
+
+  if (syncToSite) {
+    sync = await pushSubscriptionDateToSite({
+      site,
+      instance,
+      subscriptionEnd: endDate,
+      plan: renewal?.plan ?? null,
+      users: renewal?.users ?? null,
+      invoiceNo: renewal?.invoice_no ?? null,
+    });
+
+    if (renewal) {
+      await pool.execute(
+        `UPDATE renewals SET
+          activation_status = ?,
+          activation_note = ?,
+          activated_at = COALESCE(activated_at, NOW()),
+          updated_at = NOW()
+         WHERE invoice_no = ?`,
+        [sync.ok ? "webhook_ok" : "webhook_failed", sync.note, renewal.invoice_no]
+      );
+    }
+  }
+
+  const companies = await getCompaniesOverview();
+  const company = companies.find((c) => c.instance === instance);
+  if (!company) throw new Error("Company not found after update");
+
+  // Prefer the date we just saved if live status is still stale
+  if (!company.subscriptionEnd || company.subscriptionEnd < endDate) {
+    company.subscriptionEnd = endDate;
+  }
+
+  return { company, sync };
+}

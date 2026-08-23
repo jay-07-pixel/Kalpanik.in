@@ -14,7 +14,10 @@ import {
 } from "../services/renewalService.js";
 import { INSTANCE_FOLDERS, isPlanId } from "../constants/pricing.js";
 import { buildRenewalBillDocument } from "../services/renewalEmailService.js";
-import { getCompaniesOverview } from "../services/companyOverviewService.js";
+import {
+  getCompaniesOverview,
+  updateCompanySubscriptionDate,
+} from "../services/companyOverviewService.js";
 
 export const adminRouter = Router();
 
@@ -89,6 +92,41 @@ adminRouter.get("/companies", requireAdmin, async (_req, res) => {
       success: false,
       error: "SERVER_ERROR",
       message: "Failed to load companies.",
+    });
+  }
+});
+
+adminRouter.patch("/companies/:instance", requireAdmin, async (req, res) => {
+  try {
+    const instance = String(req.params.instance);
+    const subscriptionEnd =
+      typeof req.body?.subscriptionEnd === "string" ? req.body.subscriptionEnd : "";
+    if (!subscriptionEnd.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: "INVALID_INPUT",
+        message: "subscriptionEnd is required (YYYY-MM-DD).",
+      });
+    }
+    const syncToSite = req.body?.syncToSite !== false;
+    const result = await updateCompanySubscriptionDate(instance, subscriptionEnd, syncToSite);
+    return res.json({
+      success: true,
+      data: result.company,
+      sync: result.sync,
+      message: result.sync.ok
+        ? `Subscription updated. ${result.sync.note}`
+        : `Date saved, but site sync failed: ${result.sync.note}`,
+    });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Failed to update subscription date.";
+    console.error("[admin] Company subscription update failed:", error);
+    const status = /unknown company|invalid date/i.test(message) ? 400 : 500;
+    return res.status(status).json({
+      success: false,
+      error: status === 400 ? "INVALID_INPUT" : "SERVER_ERROR",
+      message,
     });
   }
 });

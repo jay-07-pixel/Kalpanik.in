@@ -29,12 +29,19 @@ function fmtDate(value: string | null): string {
   if (!value) return "—";
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return value.slice(0, 10);
-  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+  return d.toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 function fmtInr(n: number | null): string {
   if (n === null) return "—";
-  return n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return n.toLocaleString("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 }
 
 function storageLabel(used: number | null, included: number | null): string {
@@ -50,10 +57,19 @@ function planLabel(plan: string | null): string {
   return plan.replace(/_/g, " ");
 }
 
+function toDateInput(value: string | null): string {
+  if (!value) return "";
+  return value.slice(0, 10);
+}
+
 export function AdminCompaniesPanel({ token }: AdminCompaniesPanelProps) {
   const [rows, setRows] = useState<CompanyOverviewRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [editingInstance, setEditingInstance] = useState<string | null>(null);
+  const [draftDate, setDraftDate] = useState("");
+  const [savingInstance, setSavingInstance] = useState<string | null>(null);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -77,13 +93,65 @@ export function AdminCompaniesPanel({ token }: AdminCompaniesPanelProps) {
     load();
   }, [load]);
 
+  const startEdit = (row: CompanyOverviewRow) => {
+    setEditingInstance(row.instance);
+    setDraftDate(toDateInput(row.subscriptionEnd));
+    setError("");
+    setSuccess("");
+  };
+
+  const cancelEdit = () => {
+    setEditingInstance(null);
+    setDraftDate("");
+  };
+
+  const saveDate = async (row: CompanyOverviewRow, syncToSite: boolean) => {
+    if (!draftDate) {
+      setError("Pick a subscription end date.");
+      return;
+    }
+    setSavingInstance(row.instance);
+    setError("");
+    setSuccess("");
+    try {
+      const res = await fetch(
+        adminApi(`/companies/${encodeURIComponent(row.instance)}`),
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ subscriptionEnd: draftDate, syncToSite }),
+        }
+      );
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setError(data.message ?? "Failed to update subscription date");
+        return;
+      }
+      setRows((prev) =>
+        prev.map((r) => (r.instance === row.instance ? { ...r, ...data.data } : r))
+      );
+      setSuccess(data.message ?? "Subscription date updated.");
+      setEditingInstance(null);
+      setDraftDate("");
+    } catch {
+      setError("Failed to update subscription date");
+    } finally {
+      setSavingInstance(null);
+    }
+  };
+
   return (
     <section className="admin-section admin-companies">
       <div className="admin-renewals-top">
         <div>
           <h2 className="admin-section-title admin-renewals-heading">All companies</h2>
           <p className="admin-renewals-hint">
-            Subscription status across every Task Manager instance — employees, storage, renewal dates.
+            View every tenant and edit subscription end dates directly.{" "}
+            <strong>Save &amp; sync</strong> also pushes the date to that company&apos;s Task
+            Manager site.
           </p>
         </div>
         <div className="admin-header-actions">
@@ -94,6 +162,7 @@ export function AdminCompaniesPanel({ token }: AdminCompaniesPanelProps) {
       </div>
 
       {error && <p className="admin-error-banner">{error}</p>}
+      {success && <p className="admin-success-banner">{success}</p>}
 
       <div className="admin-chart-card admin-companies-table-wrap">
         {loading && rows.length === 0 ? (
@@ -118,66 +187,133 @@ export function AdminCompaniesPanel({ token }: AdminCompaniesPanelProps) {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row) => (
-                  <tr key={row.instance}>
-                    <td>
-                      <div className="admin-renewals-cell-main">{row.company}</div>
-                      <span className="admin-renewals-muted">{row.instance}</span>
-                      {row.email && <span className="admin-renewals-muted">{row.email}</span>}
-                      {!row.liveSynced && row.liveError && (
-                        <span className="admin-companies-live-warn" title={row.liveError}>
-                          Live stats unavailable
-                        </span>
-                      )}
-                    </td>
-                    <td>
-                      <div className="admin-renewals-cell-main">{planLabel(row.plan)}</div>
-                      <span className="admin-renewals-muted">{row.vpsFolder}</span>
-                    </td>
-                    <td>
-                      <div className="admin-renewals-cell-main">
-                        {row.activeEmployees ?? row.licensedUsers ?? "—"}
-                      </div>
-                      {row.licensedUsers !== null && row.activeEmployees !== row.licensedUsers && (
-                        <span className="admin-renewals-muted">{row.licensedUsers} licensed</span>
-                      )}
-                    </td>
-                    <td>
-                      <div className="admin-renewals-cell-main">
-                        {storageLabel(row.storageUsedGb, row.storageIncludedGb)}
-                      </div>
-                    </td>
-                    <td>
-                      <div className="admin-renewals-cell-main">{fmtDate(row.subscriptionEnd)}</div>
-                      {row.liveSynced && (
-                        <span className="admin-renewals-badge admin-renewals-badge--synced">Live</span>
-                      )}
-                    </td>
-                    <td>
-                      {row.lastInvoiceNo ? (
-                        <>
-                          <div className="admin-renewals-cell-main">{fmtDate(row.lastRenewalAt)}</div>
-                          <span className="admin-renewals-muted">{row.lastInvoiceNo}</span>
-                          {row.lastRenewalAmountInr !== null && (
-                            <span className="admin-renewals-muted">₹{fmtInr(row.lastRenewalAmountInr)}</span>
+                {rows.map((row) => {
+                  const isEditing = editingInstance === row.instance;
+                  const isSaving = savingInstance === row.instance;
+                  return (
+                    <tr key={row.instance}>
+                      <td>
+                        <div className="admin-renewals-cell-main">{row.company}</div>
+                        <span className="admin-renewals-muted">{row.instance}</span>
+                        {row.email && (
+                          <span className="admin-renewals-muted">{row.email}</span>
+                        )}
+                        {!row.liveSynced && row.liveError && (
+                          <span
+                            className="admin-companies-live-warn"
+                            title={row.liveError}
+                          >
+                            Live stats unavailable
+                          </span>
+                        )}
+                      </td>
+                      <td>
+                        <div className="admin-renewals-cell-main">{planLabel(row.plan)}</div>
+                        <span className="admin-renewals-muted">{row.vpsFolder}</span>
+                      </td>
+                      <td>
+                        <div className="admin-renewals-cell-main">
+                          {row.activeEmployees ?? row.licensedUsers ?? "—"}
+                        </div>
+                        {row.licensedUsers !== null &&
+                          row.activeEmployees !== row.licensedUsers && (
+                            <span className="admin-renewals-muted">
+                              {row.licensedUsers} licensed
+                            </span>
                           )}
-                        </>
-                      ) : (
-                        <span className="admin-renewals-muted">No renewal yet</span>
-                      )}
-                    </td>
-                    <td>
-                      <a
-                        className="admin-renewals-site-link"
-                        href={row.site}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Open
-                      </a>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td>
+                        <div className="admin-renewals-cell-main">
+                          {storageLabel(row.storageUsedGb, row.storageIncludedGb)}
+                        </div>
+                      </td>
+                      <td>
+                        {isEditing ? (
+                          <div className="admin-companies-date-edit">
+                            <input
+                              type="date"
+                              className="admin-companies-date-input"
+                              value={draftDate}
+                              onChange={(e) => setDraftDate(e.target.value)}
+                              disabled={isSaving}
+                            />
+                            <div className="admin-companies-date-actions">
+                              <button
+                                type="button"
+                                className="admin-btn-primary admin-btn-sm"
+                                disabled={isSaving || !draftDate}
+                                onClick={() => saveDate(row, true)}
+                              >
+                                {isSaving ? "Saving…" : "Save & sync"}
+                              </button>
+                              <button
+                                type="button"
+                                className="admin-btn-ghost admin-btn-sm"
+                                disabled={isSaving || !draftDate}
+                                onClick={() => saveDate(row, false)}
+                              >
+                                Save only
+                              </button>
+                              <button
+                                type="button"
+                                className="admin-btn-ghost admin-btn-sm"
+                                disabled={isSaving}
+                                onClick={cancelEdit}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="admin-companies-date-view">
+                            <div className="admin-renewals-cell-main">
+                              {fmtDate(row.subscriptionEnd)}
+                            </div>
+                            {row.liveSynced && (
+                              <span className="admin-renewals-badge admin-renewals-badge--synced">
+                                Live
+                              </span>
+                            )}
+                            <button
+                              type="button"
+                              className="admin-btn-ghost admin-btn-sm admin-companies-edit-date"
+                              onClick={() => startEdit(row)}
+                            >
+                              Edit date
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                      <td>
+                        {row.lastInvoiceNo ? (
+                          <>
+                            <div className="admin-renewals-cell-main">
+                              {fmtDate(row.lastRenewalAt)}
+                            </div>
+                            <span className="admin-renewals-muted">{row.lastInvoiceNo}</span>
+                            {row.lastRenewalAmountInr !== null && (
+                              <span className="admin-renewals-muted">
+                                ₹{fmtInr(row.lastRenewalAmountInr)}
+                              </span>
+                            )}
+                          </>
+                        ) : (
+                          <span className="admin-renewals-muted">No renewal yet</span>
+                        )}
+                      </td>
+                      <td>
+                        <a
+                          className="admin-renewals-site-link"
+                          href={row.site}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Open
+                        </a>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
