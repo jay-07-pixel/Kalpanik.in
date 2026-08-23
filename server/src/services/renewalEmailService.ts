@@ -174,13 +174,7 @@ export async function sendRenewalProofEmails(
     path?: string;
     content?: string | Buffer;
     contentType?: string;
-  }[] = [
-    {
-      filename: `${renewal.invoice_no}.html`,
-      content: billHtml,
-      contentType: "text/html; charset=utf-8",
-    },
-  ];
+  }[] = [];
 
   if (screenshotPath) {
     const abs = screenshotPath.startsWith("/")
@@ -205,7 +199,7 @@ export async function sendRenewalProofEmails(
     `UTR: ${utr}`,
     `Amount: ₹${amount}`,
     "",
-    "Your tax invoice is attached and shown below.",
+    "Your tax invoice is shown below.",
     "We will activate your subscription after verification.",
     "",
     text,
@@ -216,7 +210,7 @@ export async function sendRenewalProofEmails(
     `<p style="margin:0 0 16px;line-height:1.6;color:#5f6368;">
       Payment proof received for <strong>${renewal.company}</strong>
       (invoice <strong>${renewal.invoice_no}</strong>, UTR <strong>${utr}</strong>, ₹${amount}).
-      Tax invoice is below and attached.
+      Tax invoice is shown below.
     </p><h1`
   );
 
@@ -229,7 +223,7 @@ export async function sendRenewalProofEmails(
       text: bodyText,
       html: bodyHtml,
       replyTo: config.mail.replyTo,
-      attachments,
+      attachments: attachments.length ? attachments : undefined,
     });
     console.log(
       `[renewals] Invoice email sent to owner=${ownerEmail}` +
@@ -248,7 +242,7 @@ export async function sendRenewalProofEmails(
           `<p style="background:#fef7e0;padding:10px;border-radius:6px;"><strong>Ops copy</strong> — owner mail to ${ownerEmail} failed</p><h1`
         ),
         replyTo: ownerEmail,
-        attachments,
+        attachments: attachments.length ? attachments : undefined,
       });
     }
     throw err;
