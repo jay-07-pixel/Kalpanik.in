@@ -92,10 +92,12 @@ async function countEmployeesFromDb() {
       database,
     });
     try {
-      // Try common user-table shapes used by Task Manager forks
+      // Prefer counting all people (admins + employees). Fall back to licensed seats.
       const queries = [
+        "SELECT COUNT(*) AS c FROM users WHERE role IN ('admin','employee','owner','manager','user') AND (deleted_at IS NULL OR deleted_at = 0)",
         "SELECT COUNT(*) AS c FROM users WHERE deleted_at IS NULL",
-        "SELECT COUNT(*) AS c FROM users WHERE is_active = 1",
+        "SELECT COUNT(*) AS c FROM users WHERE is_active = 1 OR is_active IS NULL",
+        "SELECT COUNT(*) AS c FROM users WHERE status = 'active'",
         "SELECT COUNT(*) AS c FROM users",
         "SELECT COUNT(*) AS c FROM employees WHERE deleted_at IS NULL",
         "SELECT COUNT(*) AS c FROM employees",

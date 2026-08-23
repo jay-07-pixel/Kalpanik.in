@@ -105,9 +105,16 @@ export async function getCompaniesOverview(): Promise<CompanyOverviewRow[]> {
       const live = await fetchLiveSiteStatus(site);
 
       const licensedUsers = renewal?.users ?? parseOptionalInt(live.maxUsers);
+      const liveHeadcount = parseOptionalInt(live.employeeCount);
+      // Each admin + employee gets 1 GB. Prefer live headcount from Task Manager.
+      const headcount =
+        liveHeadcount != null && liveHeadcount > 0
+          ? liveHeadcount
+          : licensedUsers != null && licensedUsers > 0
+            ? licensedUsers
+            : null;
       const extraGb = renewal?.extra_gb ?? 0;
-      const storageIncludedGb =
-        licensedUsers !== null ? licensedUsers * 1 + extraGb : null;
+      const storageIncludedGb = headcount != null ? headcount * 1 + extraGb : null;
 
       const planId = renewal?.plan as PlanId | undefined;
       const plan =
@@ -142,7 +149,7 @@ export async function getCompaniesOverview(): Promise<CompanyOverviewRow[]> {
         vpsFolder: INSTANCE_FOLDERS[instance] ?? instance,
         plan,
         licensedUsers,
-        activeEmployees: parseOptionalInt(live.employeeCount) ?? licensedUsers,
+        activeEmployees: headcount,
         storageIncludedGb,
         storageUsedGb,
         storageUsedMb,

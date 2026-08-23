@@ -60,17 +60,24 @@ function formatUsedStorage(usedMb: number | null, usedGb: number | null): string
 function storageLabel(
   usedMb: number | null,
   usedGb: number | null,
-  includedGb: number | null
-): string {
+  includedGb: number | null,
+  headcount: number | null
+): { primary: string; hint: string | null } {
   const used = formatUsedStorage(usedMb, usedGb);
   const included =
     includedGb != null && Number.isFinite(includedGb)
       ? `${includedGb % 1 === 0 ? includedGb.toFixed(0) : includedGb.toFixed(1)} GB`
       : null;
-  if (used && included) return `${used} / ${included}`;
-  if (included) return `— / ${included}`;
-  if (used) return `${used} used`;
-  return "—";
+  let primary = "—";
+  if (used && included) primary = `${used} / ${included}`;
+  else if (included) primary = `— / ${included}`;
+  else if (used) primary = `${used} used`;
+
+  const hint =
+    headcount != null && headcount > 0
+      ? `${headcount} people × 1 GB`
+      : null;
+  return { primary, hint };
 }
 
 function planLabel(plan: string | null): string {
@@ -235,23 +242,36 @@ export function AdminCompaniesPanel({ token }: AdminCompaniesPanelProps) {
                       </td>
                       <td>
                         <div className="admin-renewals-cell-main">
-                          {row.activeEmployees ?? row.licensedUsers ?? "—"}
+                          {row.activeEmployees ?? "—"}
                         </div>
-                        {row.licensedUsers !== null &&
-                          row.activeEmployees !== row.licensedUsers && (
+                        {row.licensedUsers != null &&
+                          row.activeEmployees != null &&
+                          row.licensedUsers !== row.activeEmployees && (
                             <span className="admin-renewals-muted">
                               {row.licensedUsers} licensed
                             </span>
                           )}
+                        {row.activeEmployees != null && (
+                          <span className="admin-renewals-muted">admins + employees</span>
+                        )}
                       </td>
                       <td>
-                        <div className="admin-renewals-cell-main">
-                          {storageLabel(
+                        {(() => {
+                          const storage = storageLabel(
                             row.storageUsedMb,
                             row.storageUsedGb,
-                            row.storageIncludedGb
-                          )}
-                        </div>
+                            row.storageIncludedGb,
+                            row.activeEmployees
+                          );
+                          return (
+                            <>
+                              <div className="admin-renewals-cell-main">{storage.primary}</div>
+                              {storage.hint && (
+                                <span className="admin-renewals-muted">{storage.hint}</span>
+                              )}
+                            </>
+                          );
+                        })()}
                       </td>
                       <td>
                         {isEditing ? (
