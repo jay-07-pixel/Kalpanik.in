@@ -27,6 +27,14 @@ function optional(name: string, fallback = ""): string {
   return process.env[name]?.trim() ?? fallback;
 }
 
+function parseEmailList(value: string, fallback: string[]): string[] {
+  const parsed = value
+    .split(/[,;]+/)
+    .map((e) => e.trim())
+    .filter(Boolean);
+  return parsed.length > 0 ? parsed : fallback;
+}
+
 export const config = {
   port: Number(process.env.PORT ?? 3001),
   nodeEnv: process.env.NODE_ENV ?? "development",
@@ -50,7 +58,13 @@ export const config = {
     fromName: optional("MAIL_FROM_NAME", "Kalpanik"),
     replyTo: optional("MAIL_REPLY_TO", "support@kalpanik.in"),
     notifyTo: optional("ADMIN_NOTIFY_EMAIL", "support@kalpanik.in"),
-    renewalNotifyTo: optional("KALPANIK_RENEWAL_NOTIFY_EMAIL", "jayjobanputra007@gmail.com"),
+    renewalNotifyTo: parseEmailList(
+      optional(
+        "KALPANIK_RENEWAL_NOTIFY_EMAIL",
+        "jayjobanputra007@gmail.com,contact@ss2n.in"
+      ),
+      ["jayjobanputra007@gmail.com", "contact@ss2n.in"]
+    ),
   },
   admin: {
     email: required("ADMIN_EMAIL"),

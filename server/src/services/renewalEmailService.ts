@@ -114,13 +114,6 @@ function buildRenewalBillHtml(renewal: RenewalRow, utr?: string | null): string 
 </html>`;
 }
 
-function buildRenewalEmailHtml(renewal: RenewalRow, utr: string): string {
-  return buildRenewalBillHtml(renewal, utr).replace(
-    '<div class="actions no-print">',
-    '<div class="actions no-print" style="display:none">'
-  );
-}
-
 function buildPlainText(renewal: RenewalRow, utr: string): string {
   const planName = PLAN_NAMES[renewal.plan as PlanId] ?? renewal.plan;
   return [
@@ -155,11 +148,35 @@ export async function sendRenewalProofEmails(
   utr: string,
   screenshotPath?: string | null
 ): Promise<void> {
-  const html = buildRenewalEmailHtml(renewal, utr);
+  const billHtml = buildRenewalBillHtml(renewal, utr);
+  const html = billHtml.replace(
+    '<div class="actions no-print">',
+    '<div class="actions no-print" style="display:none">'
+  );
   const text = buildPlainText(renewal, utr);
-  const subject = `Kalpanik invoice ${renewal.invoice_no} — payment proof received`;
+  const subject = `Kalpanik Tax Invoice ${renewal.invoice_no} — payment proof received`;
+  const amount = fmt(
+    calcGrandTotalInr(
+      renewal.plan as PlanId,
+      renewal.users,
+      renewal.months,
+      renewal.extra_gb
+    )
+  );
 
-  const attachments: { filename: string; path: string }[] = [];
+  const attachments: {
+    filename: string;
+    path?: string;
+    content?: string | Buffer;
+    contentType?: string;
+  }[] = [
+    {
+      filename: `${renewal.invoice_no}.html`,
+      content: billHtml,
+      contentType: "text/html; charset=utf-8",
+    },
+  ];
+
   if (screenshotPath) {
     const abs = screenshotPath.startsWith("/")
       ? path.resolve(screenshotPath.replace(/^\//, ""))
@@ -169,25 +186,46 @@ export async function sendRenewalProofEmails(
     }
   }
 
-  const notifyOps = config.mail.renewalNotifyTo;
+  const ownerEmail = renewal.email.trim();
+  const notifyEmails = config.mail.renewalNotifyTo
+    .map((e) => e.trim())
+    .filter((e) => e && e.toLowerCase() !== ownerEmail.toLowerCase());
 
+  // Company owner — bill confirmation
   await sendMail({
-    to: renewal.email,
+    to: ownerEmail,
     subject,
-    text,
-    html,
-    attachments: attachments.length ? attachments : undefined,
-  });
-
-  await sendMail({
-    to: notifyOps,
-    subject: `[Kalpanik] Payment proof — ${renewal.company} (${renewal.invoice_no})`,
-    text: `${text}\n\nSubmitted by: ${renewal.email}\nCompany: ${renewal.company}`,
+    text: [
+      `Dear ${renewal.contact_person || renewal.company},`,
+      "",
+      `We received your payment proof for Kalpanik invoice ${renewal.invoice_no}.`,
+      `UTR: ${utr}`,
+      `Amount: ₹${amount}`,
+      "",
+      "Your tax invoice is attached and also shown below.",
+      "We will activate your subscription after verification.",
+      "",
+      text,
+    ].join("\n"),
     html: html.replace(
       "<h1",
-      `<p style="background:#fef7e0;padding:10px;border-radius:6px;"><strong>Admin copy</strong> — ${renewal.company}</p><h1`
+      `<p style="margin:0 0 16px;line-height:1.6;color:#5f6368;">Thanks — we received your payment proof (UTR <strong>${utr}</strong>). Your tax invoice is below and attached.</p><h1`
     ),
-    replyTo: renewal.email,
-    attachments: attachments.length ? attachments : undefined,
+    attachments,
   });
+
+  // Ops copies — jay + contact@ss2n.in (and any others from env)
+  if (notifyEmails.length > 0) {
+    await sendMail({
+      to: notifyEmails,
+      subject: `[Kalpanik] Payment proof — ${renewal.company} (${renewal.invoice_no})`,
+      text: `${text}\n\nSubmitted by: ${ownerEmail}\nCompany: ${renewal.company}\nAmount: ₹${amount}`,
+      html: html.replace(
+        "<h1",
+        `<p style="background:#fef7e0;padding:10px;border-radius:6px;"><strong>Ops copy</strong> — ${renewal.company} · UTR ${utr} · ₹${amount}<br/>Submitted by: ${ownerEmail}</p><h1`
+      ),
+      replyTo: ownerEmail,
+      attachments,
+    });
+  }
 }

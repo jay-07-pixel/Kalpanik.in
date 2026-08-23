@@ -114,18 +114,23 @@ export async function verifySmtpConnection(): Promise<void> {
 }
 
 export interface SendMailOptions {
-  to: string;
+  to: string | string[];
   subject: string;
   text: string;
   html: string;
   replyTo?: string;
-  attachments?: { filename: string; path: string }[];
+  attachments?: {
+    filename: string;
+    path?: string;
+    content?: string | Buffer;
+    contentType?: string;
+  }[];
 }
 
 export async function sendMail(options: SendMailOptions): Promise<void> {
   await transporter.sendMail({
     from: `"${config.mail.fromName}" <${config.smtp.from}>`,
-    to: options.to,
+    to: Array.isArray(options.to) ? options.to.join(", ") : options.to,
     replyTo: options.replyTo ?? config.mail.replyTo,
     subject: options.subject,
     text: options.text,
