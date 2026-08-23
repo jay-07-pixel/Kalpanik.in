@@ -15,6 +15,7 @@ export interface CompanyOverviewRow {
   activeEmployees: number | null;
   storageIncludedGb: number | null;
   storageUsedGb: number | null;
+  storageUsedMb: number | null;
   subscriptionEnd: string | null;
   lastRenewalAt: string | null;
   lastInvoiceNo: string | null;
@@ -30,6 +31,8 @@ interface LiveSiteStatus {
   maxUsers?: number | null;
   employeeCount?: number | null;
   storageUsedGb?: number | null;
+  storageUsedMb?: number | null;
+  storageUsedBytes?: number | null;
   error?: string;
 }
 
@@ -81,10 +84,15 @@ function formatDate(value: Date | string | null | undefined): string | null {
   return d.toISOString().slice(0, 10);
 }
 
-function parseOptionalInt(value: unknown): number | null {
+function parseOptionalNumber(value: unknown): number | null {
   if (value === null || value === undefined || value === "") return null;
   const n = Number(value);
-  return Number.isFinite(n) ? Math.floor(n) : null;
+  return Number.isFinite(n) ? n : null;
+}
+
+function parseOptionalInt(value: unknown): number | null {
+  const n = parseOptionalNumber(value);
+  return n === null ? null : Math.floor(n);
 }
 
 export async function getCompaniesOverview(): Promise<CompanyOverviewRow[]> {
@@ -113,6 +121,19 @@ export async function getCompaniesOverview(): Promise<CompanyOverviewRow[]> {
 
       const lastRenewalAt = renewal?.paid_at ?? renewal?.created_at ?? null;
 
+      const storageUsedGb =
+        parseOptionalNumber(live.storageUsedGb) ??
+        (live.storageUsedBytes != null
+          ? Math.round((Number(live.storageUsedBytes) / (1024 * 1024 * 1024)) * 1000) / 1000
+          : null);
+      const storageUsedMb =
+        parseOptionalNumber(live.storageUsedMb) ??
+        (storageUsedGb != null
+          ? Math.round(storageUsedGb * 1024 * 10) / 10
+          : live.storageUsedBytes != null
+            ? Math.round((Number(live.storageUsedBytes) / (1024 * 1024)) * 10) / 10
+            : null);
+
       return {
         instance,
         company: renewal?.company ?? meta.label,
@@ -123,7 +144,8 @@ export async function getCompaniesOverview(): Promise<CompanyOverviewRow[]> {
         licensedUsers,
         activeEmployees: parseOptionalInt(live.employeeCount) ?? licensedUsers,
         storageIncludedGb,
-        storageUsedGb: parseOptionalInt(live.storageUsedGb),
+        storageUsedGb,
+        storageUsedMb,
         subscriptionEnd,
         lastRenewalAt: lastRenewalAt ? new Date(lastRenewalAt).toISOString() : null,
         lastInvoiceNo: renewal?.invoice_no ?? null,

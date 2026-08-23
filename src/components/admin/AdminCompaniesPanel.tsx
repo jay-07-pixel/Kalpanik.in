@@ -13,6 +13,7 @@ export interface CompanyOverviewRow {
   activeEmployees: number | null;
   storageIncludedGb: number | null;
   storageUsedGb: number | null;
+  storageUsedMb: number | null;
   subscriptionEnd: string | null;
   lastRenewalAt: string | null;
   lastInvoiceNo: string | null;
@@ -44,10 +45,31 @@ function fmtInr(n: number | null): string {
   });
 }
 
-function storageLabel(used: number | null, included: number | null): string {
-  if (used !== null && included !== null) return `${used} / ${included} GB`;
-  if (included !== null) return `— / ${included} GB`;
-  if (used !== null) return `${used} GB used`;
+function formatUsedStorage(usedMb: number | null, usedGb: number | null): string | null {
+  if (usedMb != null && Number.isFinite(usedMb)) {
+    if (usedMb < 1024) return `${usedMb.toFixed(usedMb < 10 ? 1 : 0)} MB`;
+    return `${(usedMb / 1024).toFixed(2)} GB`;
+  }
+  if (usedGb != null && Number.isFinite(usedGb)) {
+    if (usedGb < 1) return `${(usedGb * 1024).toFixed(1)} MB`;
+    return `${usedGb.toFixed(2)} GB`;
+  }
+  return null;
+}
+
+function storageLabel(
+  usedMb: number | null,
+  usedGb: number | null,
+  includedGb: number | null
+): string {
+  const used = formatUsedStorage(usedMb, usedGb);
+  const included =
+    includedGb != null && Number.isFinite(includedGb)
+      ? `${includedGb % 1 === 0 ? includedGb.toFixed(0) : includedGb.toFixed(1)} GB`
+      : null;
+  if (used && included) return `${used} / ${included}`;
+  if (included) return `— / ${included}`;
+  if (used) return `${used} used`;
   return "—";
 }
 
@@ -224,7 +246,11 @@ export function AdminCompaniesPanel({ token }: AdminCompaniesPanelProps) {
                       </td>
                       <td>
                         <div className="admin-renewals-cell-main">
-                          {storageLabel(row.storageUsedGb, row.storageIncludedGb)}
+                          {storageLabel(
+                            row.storageUsedMb,
+                            row.storageUsedGb,
+                            row.storageIncludedGb
+                          )}
                         </div>
                       </td>
                       <td>

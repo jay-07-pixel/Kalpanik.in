@@ -22,6 +22,102 @@ function upsertEnvLine(envText, key, value) {
   return `${envText.trimEnd()}\n${line}\n`;
 }
 
+function dirSizeBytes(dir, depth = 0) {
+  if (depth > 12 || !fs.existsSync(dir)) return 0;
+  let total = 0;
+  let entries;
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return 0;
+  }
+  for (const entry of entries) {
+    const full = path.join(dir, entry.name);
+    try {
+      if (entry.isDirectory()) {
+        if (entry.name === "node_modules" || entry.name === ".git" || entry.name === "dist") {
+          continue;
+        }
+        total += dirSizeBytes(full, depth + 1);
+      } else if (entry.isFile()) {
+        total += fs.statSync(full).size;
+      }
+    } catch {
+      /* skip unreadable */
+    }
+  }
+  return total;
+}
+
+/** Sum upload/media folders used by Task Manager (company-wide total). */
+function measureCompanyStorageBytes() {
+  const candidates = [
+    path.join(__dirname, "uploads"),
+    path.join(__dirname, "upload"),
+    path.join(__dirname, "storage"),
+    path.join(__dirname, "media"),
+    path.join(__dirname, "public", "uploads"),
+    path.join(__dirname, "..", "uploads"),
+    path.join(__dirname, "..", "upload"),
+    path.join(__dirname, "..", "storage"),
+    path.join(__dirname, "..", "client", "uploads"),
+    path.join(__dirname, "..", "client", "public", "uploads"),
+  ];
+
+  let total = 0;
+  const seen = new Set();
+  for (const dir of candidates) {
+    const resolved = path.resolve(dir);
+    if (seen.has(resolved)) continue;
+    seen.add(resolved);
+    if (fs.existsSync(resolved)) total += dirSizeBytes(resolved);
+  }
+  return total;
+}
+
+async function countEmployeesFromDb() {
+  try {
+    const mysql = await import("mysql2/promise");
+    const host = process.env.DB_HOST || process.env.MYSQL_HOST || "127.0.0.1";
+    const user = process.env.DB_USER || process.env.MYSQL_USER;
+    const password = process.env.DB_PASSWORD || process.env.MYSQL_PASSWORD || "";
+    const database = process.env.DB_NAME || process.env.MYSQL_DATABASE;
+    if (!user || !database) return null;
+
+    const conn = await mysql.createConnection({
+      host,
+      port: Number(process.env.DB_PORT || process.env.MYSQL_PORT || 3306),
+      user,
+      password,
+      database,
+    });
+    try {
+      // Try common user-table shapes used by Task Manager forks
+      const queries = [
+        "SELECT COUNT(*) AS c FROM users WHERE deleted_at IS NULL",
+        "SELECT COUNT(*) AS c FROM users WHERE is_active = 1",
+        "SELECT COUNT(*) AS c FROM users",
+        "SELECT COUNT(*) AS c FROM employees WHERE deleted_at IS NULL",
+        "SELECT COUNT(*) AS c FROM employees",
+      ];
+      for (const sql of queries) {
+        try {
+          const [rows] = await conn.query(sql);
+          const c = Number(rows?.[0]?.c);
+          if (Number.isFinite(c)) return c;
+        } catch {
+          /* try next */
+        }
+      }
+    } finally {
+      await conn.end().catch(() => {});
+    }
+  } catch {
+    /* mysql not available / misconfigured */
+  }
+  return null;
+}
+
 export function registerKalpanikSubscriptionActivate(app) {
   function checkSecret(req, res) {
     const secret = process.env.KALPANIK_ACTIVATION_SECRET;
@@ -32,22 +128,44 @@ export function registerKalpanikSubscriptionActivate(app) {
     return true;
   }
 
-  app.get("/api/company/subscription/status", (req, res) => {
+  app.get("/api/company/subscription/status", async (req, res) => {
     if (!checkSecret(req, res)) return;
 
     const trialEnd = process.env.COMPANY_TRIAL_END?.trim()?.slice(0, 10) || null;
     const plan = process.env.COMPANY_PLAN?.trim() || null;
     const maxUsers = process.env.COMPANY_MAX_USERS?.trim() || null;
-    const employeeCount = process.env.COMPANY_EMPLOYEE_COUNT?.trim() || null;
-    const storageUsedGb = process.env.COMPANY_STORAGE_USED_GB?.trim() || null;
+
+    let storageUsedBytes = measureCompanyStorageBytes();
+    const envStorageGb = process.env.COMPANY_STORAGE_USED_GB?.trim();
+    if (envStorageGb && Number(envStorageGb) > 0 && storageUsedBytes <= 0) {
+      storageUsedBytes = Number(envStorageGb) * 1024 * 1024 * 1024;
+    }
+
+    const storageUsedGb =
+      storageUsedBytes > 0
+        ? Math.round((storageUsedBytes / (1024 * 1024 * 1024)) * 1000) / 1000
+        : 0;
+    const storageUsedMb =
+      storageUsedBytes > 0
+        ? Math.round((storageUsedBytes / (1024 * 1024)) * 10) / 10
+        : 0;
+
+    let employeeCount = process.env.COMPANY_EMPLOYEE_COUNT?.trim()
+      ? Number(process.env.COMPANY_EMPLOYEE_COUNT)
+      : null;
+    if (employeeCount === null || Number.isNaN(employeeCount)) {
+      employeeCount = await countEmployeesFromDb();
+    }
 
     return res.json({
       ok: true,
       trialEnd,
       plan,
       maxUsers: maxUsers ? Number(maxUsers) : null,
-      employeeCount: employeeCount ? Number(employeeCount) : null,
-      storageUsedGb: storageUsedGb ? Number(storageUsedGb) : null,
+      employeeCount: employeeCount != null && Number.isFinite(employeeCount) ? employeeCount : null,
+      storageUsedBytes,
+      storageUsedMb,
+      storageUsedGb,
     });
   });
 
