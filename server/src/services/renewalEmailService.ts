@@ -148,13 +148,17 @@ export async function sendRenewalProofEmails(
   utr: string,
   screenshotPath?: string | null
 ): Promise<void> {
+  const ownerEmail = renewal.email?.trim();
+  if (!ownerEmail) {
+    throw new Error("Company owner email is missing — cannot send invoice.");
+  }
+
   const billHtml = buildRenewalBillHtml(renewal, utr);
   const html = billHtml.replace(
     '<div class="actions no-print">',
     '<div class="actions no-print" style="display:none">'
   );
   const text = buildPlainText(renewal, utr);
-  const subject = `Kalpanik Tax Invoice ${renewal.invoice_no} — payment proof received`;
   const amount = fmt(
     calcGrandTotalInr(
       renewal.plan as PlanId,
@@ -163,6 +167,7 @@ export async function sendRenewalProofEmails(
       renewal.extra_gb
     )
   );
+  const subject = `Kalpanik Tax Invoice ${renewal.invoice_no} — ${renewal.company}`;
 
   const attachments: {
     filename: string;
@@ -186,46 +191,66 @@ export async function sendRenewalProofEmails(
     }
   }
 
-  const ownerEmail = renewal.email.trim();
   const notifyEmails = config.mail.renewalNotifyTo
     .map((e) => e.trim())
     .filter((e) => e && e.toLowerCase() !== ownerEmail.toLowerCase());
 
-  // Company owner — bill confirmation
-  await sendMail({
-    to: ownerEmail,
-    subject,
-    text: [
-      `Dear ${renewal.contact_person || renewal.company},`,
-      "",
-      `We received your payment proof for Kalpanik invoice ${renewal.invoice_no}.`,
-      `UTR: ${utr}`,
-      `Amount: ₹${amount}`,
-      "",
-      "Your tax invoice is attached and also shown below.",
-      "We will activate your subscription after verification.",
-      "",
-      text,
-    ].join("\n"),
-    html: html.replace(
-      "<h1",
-      `<p style="margin:0 0 16px;line-height:1.6;color:#5f6368;">Thanks — we received your payment proof (UTR <strong>${utr}</strong>). Your tax invoice is below and attached.</p><h1`
-    ),
-    attachments,
-  });
+  const bodyText = [
+    `Dear ${renewal.contact_person || renewal.company},`,
+    "",
+    `Payment proof was received for your Kalpanik subscription renewal.`,
+    "",
+    `Company: ${renewal.company}`,
+    `Invoice: ${renewal.invoice_no}`,
+    `UTR: ${utr}`,
+    `Amount: ₹${amount}`,
+    "",
+    "Your tax invoice is attached and shown below.",
+    "We will activate your subscription after verification.",
+    "",
+    text,
+  ].join("\n");
 
-  // Ops copies — jay + contact@ss2n.in (and any others from env)
-  if (notifyEmails.length > 0) {
+  const bodyHtml = html.replace(
+    "<h1",
+    `<p style="margin:0 0 16px;line-height:1.6;color:#5f6368;">
+      Payment proof received for <strong>${renewal.company}</strong>
+      (invoice <strong>${renewal.invoice_no}</strong>, UTR <strong>${utr}</strong>, ₹${amount}).
+      Tax invoice is below and attached.
+    </p><h1`
+  );
+
+  // Owner is always To; ops (jay + contact@ss2n.in) are Cc — only this company's invoice
+  try {
     await sendMail({
-      to: notifyEmails,
-      subject: `[Kalpanik] Payment proof — ${renewal.company} (${renewal.invoice_no})`,
-      text: `${text}\n\nSubmitted by: ${ownerEmail}\nCompany: ${renewal.company}\nAmount: ₹${amount}`,
-      html: html.replace(
-        "<h1",
-        `<p style="background:#fef7e0;padding:10px;border-radius:6px;"><strong>Ops copy</strong> — ${renewal.company} · UTR ${utr} · ₹${amount}<br/>Submitted by: ${ownerEmail}</p><h1`
-      ),
-      replyTo: ownerEmail,
+      to: ownerEmail,
+      cc: notifyEmails.length ? notifyEmails : undefined,
+      subject,
+      text: bodyText,
+      html: bodyHtml,
+      replyTo: config.mail.replyTo,
       attachments,
     });
+    console.log(
+      `[renewals] Invoice email sent to owner=${ownerEmail}` +
+        (notifyEmails.length ? ` cc=${notifyEmails.join(",")}` : "") +
+        ` invoice=${renewal.invoice_no}`
+    );
+  } catch (err) {
+    console.error(`[renewals] Owner invoice email failed (${ownerEmail}):`, err);
+    if (notifyEmails.length) {
+      await sendMail({
+        to: notifyEmails,
+        subject: `[Kalpanik] Payment proof — ${renewal.company} (${renewal.invoice_no}) [owner mail failed]`,
+        text: `${bodyText}\n\nNOTE: Owner email to ${ownerEmail} failed. Check SMTP logs.`,
+        html: bodyHtml.replace(
+          "<h1",
+          `<p style="background:#fef7e0;padding:10px;border-radius:6px;"><strong>Ops copy</strong> — owner mail to ${ownerEmail} failed</p><h1`
+        ),
+        replyTo: ownerEmail,
+        attachments,
+      });
+    }
+    throw err;
   }
 }

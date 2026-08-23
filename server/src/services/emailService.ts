@@ -115,6 +115,7 @@ export async function verifySmtpConnection(): Promise<void> {
 
 export interface SendMailOptions {
   to: string | string[];
+  cc?: string | string[];
   subject: string;
   text: string;
   html: string;
@@ -127,10 +128,19 @@ export interface SendMailOptions {
   }[];
 }
 
+function joinAddresses(value: string | string[] | undefined): string | undefined {
+  if (!value) return undefined;
+  const list = (Array.isArray(value) ? value : [value])
+    .map((e) => e.trim())
+    .filter(Boolean);
+  return list.length ? list.join(", ") : undefined;
+}
+
 export async function sendMail(options: SendMailOptions): Promise<void> {
   await transporter.sendMail({
     from: `"${config.mail.fromName}" <${config.smtp.from}>`,
-    to: Array.isArray(options.to) ? options.to.join(", ") : options.to,
+    to: joinAddresses(options.to),
+    cc: joinAddresses(options.cc),
     replyTo: options.replyTo ?? config.mail.replyTo,
     subject: options.subject,
     text: options.text,
