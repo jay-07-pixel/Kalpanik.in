@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { SiteNav } from "../components/marketing/SiteNav";
 import { SiteFooter } from "../components/marketing/PricingCards";
 import { Reveal } from "../components/marketing/Reveal";
+import { SplashScreen } from "../components/marketing/SplashScreen";
 import { AdminLoginModal } from "../components/admin/AdminLoginModal";
 import { useSecretAdmin } from "../hooks/useSecretAdmin";
 import { usePageTracking } from "../hooks/usePageTracking";
@@ -27,6 +28,7 @@ export function MarketingHome() {
 
   return (
     <div className="mkt-shell">
+      <SplashScreen />
       <SiteNav onLogoSecretClick={handleSecretUnlock} />
 
       <section className="mkt-hero mkt-hero--company" aria-labelledby="mkt-hero-brand">
