@@ -1,14 +1,13 @@
 export type PlanId = "task_management" | "task_attendance";
 
-/** TEST: set to 0 to use real pricing. Flat total charged on every invoice. */
-export const TEST_FLAT_BILL_INR = 1;
+/** Set > 0 only for test billing (flat invoice total). Use 0 in production. */
+export const TEST_FLAT_BILL_INR = 0;
 
-/** TEST pricing — restore 299/349 and storage 100 for production */
-export const EXTRA_STORAGE_PRICE_PER_GB = 1;
+export const EXTRA_STORAGE_PRICE_PER_GB = 100;
 
 export const PLAN_PRICES: Record<PlanId, number> = {
-  task_management: 1,
-  task_attendance: 1,
+  task_management: 299,
+  task_attendance: 349,
 };
 
 export const PLAN_NAMES: Record<PlanId, string> = {

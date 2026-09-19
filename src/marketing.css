@@ -1,14 +1,49 @@
-/* Kalpanik marketing + renew — teal/blue SaaS */
+/* Kalpanik marketing — logo cyan (#2098b0) on charcoal */
 
 .mkt-shell {
+  --mkt-bg: #07090b;
+  --mkt-bg-elev: #0e1216;
+  --mkt-ink: #f3f7f9;
+  --mkt-muted: #8b9aa3;
+  --mkt-faint: #5c6b74;
+  --mkt-line: rgba(243, 247, 249, 0.08);
+  --mkt-cyan: #2098b0;
+  --mkt-cyan-bright: #2fc0d8;
+  --mkt-cyan-dim: rgba(32, 152, 176, 0.16);
+  --mkt-cyan-glow: rgba(32, 152, 176, 0.22);
+  --mkt-display: "Plus Jakarta Sans", var(--font-body), sans-serif;
+  --mkt-mono: "IBM Plex Mono", ui-monospace, monospace;
+
   min-height: 100vh;
+  color: var(--mkt-ink);
+  font-family: var(--mkt-display);
   background:
-    radial-gradient(ellipse 90% 50% at 10% -10%, rgba(14, 165, 233, 0.16), transparent 50%),
-    radial-gradient(ellipse 70% 40% at 90% 0%, rgba(45, 212, 191, 0.12), transparent 45%),
-    linear-gradient(180deg, #f0f9ff 0%, #f8fafc 40%, #ffffff 100%);
-  color: #0f172a;
-  font-family: var(--font-body);
+    radial-gradient(ellipse 80% 50% at 50% -20%, var(--mkt-cyan-glow), transparent 55%),
+    radial-gradient(ellipse 50% 40% at 100% 30%, rgba(32, 152, 176, 0.08), transparent 50%),
+    var(--mkt-bg);
+  overflow-x: hidden;
 }
+
+.mkt-shell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.4;
+  background-image:
+    linear-gradient(rgba(243, 247, 249, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(243, 247, 249, 0.03) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(ellipse 70% 55% at 50% 0%, #000 20%, transparent 75%);
+}
+
+.mkt-shell > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Nav ── */
 
 .mkt-nav {
   position: sticky;
@@ -18,10 +53,10 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.85rem clamp(1rem, 4vw, 2.5rem);
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(14, 165, 233, 0.12);
+  padding: 0.7rem clamp(1rem, 4vw, 2.75rem);
+  background: rgba(7, 9, 11, 0.78);
+  backdrop-filter: blur(16px) saturate(1.1);
+  border-bottom: 1px solid var(--mkt-line);
 }
 
 .mkt-nav-brand {
@@ -33,177 +68,602 @@
   cursor: default;
   padding: 0;
   text-align: left;
+  color: inherit;
 }
 
 .mkt-nav-logo {
-  height: 3rem;
+  height: 2.4rem;
   width: auto;
+  mix-blend-mode: screen;
 }
 
 .mkt-nav-brand strong {
   display: block;
-  font-family: var(--font-display);
-  letter-spacing: 0.08em;
   font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--mkt-cyan-bright);
 }
 
 .mkt-nav-brand em {
   display: block;
   font-style: normal;
   font-size: 0.68rem;
-  color: #64748b;
-  max-width: 16rem;
+  color: var(--mkt-faint);
+  letter-spacing: 0.04em;
+  margin-top: 0.15rem;
 }
 
 .mkt-nav-links {
   display: flex;
   align-items: center;
-  gap: 0.85rem;
+  gap: 0.2rem 1.15rem;
   flex-wrap: wrap;
 }
 
 .mkt-nav-links a {
-  color: #334155;
+  color: var(--mkt-muted);
   text-decoration: none;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   font-weight: 500;
+  transition: color 0.2s ease;
 }
 
+.mkt-nav-links a:hover,
 .mkt-nav-links a.active {
-  color: #0284c7;
+  color: var(--mkt-ink);
 }
 
 .mkt-nav-cta {
-  padding: 0.55rem 0.95rem !important;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #0ea5e9, #14b8a6);
-  color: #fff !important;
-  box-shadow: 0 8px 24px rgba(14, 165, 233, 0.28);
+  padding: 0.45rem 0.85rem !important;
+  border-radius: 0.4rem;
+  background: var(--mkt-cyan);
+  color: #041016 !important;
+  font-weight: 600 !important;
 }
+
+.mkt-nav-cta:hover {
+  background: var(--mkt-cyan-bright) !important;
+  color: #041016 !important;
+}
+
+/* ── Hero ── */
 
 .mkt-hero {
   position: relative;
-  padding: clamp(3rem, 8vw, 5.5rem) clamp(1rem, 4vw, 2.5rem) 2.5rem;
-  text-align: center;
+  padding: clamp(2.5rem, 7vw, 4.5rem) clamp(1rem, 4vw, 2.75rem) 2.5rem;
   overflow: hidden;
 }
 
+.mkt-hero--company {
+  min-height: min(88vh, 48rem);
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+  align-items: center;
+  max-width: 78rem;
+  margin: 0 auto;
+  padding-top: clamp(2rem, 5vw, 3.5rem);
+  padding-bottom: clamp(2.5rem, 6vw, 4rem);
+}
+
 .mkt-hero--compact {
-  padding-top: 2.5rem;
-  padding-bottom: 1.5rem;
+  min-height: 0;
+  display: block;
+  text-align: center;
+  padding-top: 2.75rem;
+  padding-bottom: 1.75rem;
 }
 
 .mkt-hero-bg {
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(120deg, rgba(14, 165, 233, 0.08), transparent 40%),
-    linear-gradient(300deg, rgba(20, 184, 166, 0.08), transparent 35%);
   pointer-events: none;
+  background:
+    radial-gradient(circle at 75% 40%, var(--mkt-cyan-dim), transparent 42%),
+    radial-gradient(circle at 15% 80%, rgba(32, 152, 176, 0.08), transparent 40%);
+}
+
+.mkt-hero-copy {
+  position: relative;
+  z-index: 1;
+  animation: mkt-rise 0.85s ease both;
+}
+
+.mkt-hero-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1.1rem;
+  font-family: var(--mkt-mono);
+  font-size: 0.75rem;
+  color: var(--mkt-cyan);
+  letter-spacing: 0.04em;
+}
+
+.mkt-hero-kicker::before {
+  content: "";
+  width: 1.5rem;
+  height: 1px;
+  background: var(--mkt-cyan);
+}
+
+.mkt-hero-brand {
+  margin: 0 0 0.85rem;
+  font-size: clamp(2.2rem, 5.5vw, 3.75rem);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  line-height: 1.05;
+  text-transform: uppercase;
+  color: var(--mkt-cyan-bright);
+}
+
+.mkt-hero-headline {
+  margin: 0 0 1rem;
+  max-width: 14ch;
+  font-size: clamp(1.65rem, 3.6vw, 2.75rem);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1.12;
+  color: var(--mkt-ink);
+}
+
+.mkt-hero--compact h1 {
+  margin: 0 auto 0.85rem;
+  font-size: clamp(1.85rem, 4.5vw, 2.75rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--mkt-ink);
 }
 
 .mkt-trial-badge {
-  position: relative;
   display: inline-block;
   margin: 0 0 1rem;
-  padding: 0.4rem 0.9rem;
-  border-radius: 999px;
-  border: 1px solid rgba(14, 165, 233, 0.35);
-  background: rgba(14, 165, 233, 0.08);
-  color: #0369a1;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  padding: 0.35rem 0.65rem;
+  border-radius: 0.35rem;
+  border: 1px solid rgba(32, 152, 176, 0.35);
+  background: var(--mkt-cyan-dim);
+  color: var(--mkt-cyan-bright);
+  font-family: var(--mkt-mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
-.mkt-hero h1 {
-  position: relative;
-  margin: 0 auto 1rem;
-  max-width: 18ch;
-  font-family: var(--font-display);
-  font-size: clamp(1.85rem, 5vw, 3.25rem);
-  line-height: 1.15;
-  letter-spacing: 0.02em;
-  color: #0c4a6e;
-}
-
 .mkt-hero-sub {
-  position: relative;
-  margin: 0 auto 1.5rem;
-  max-width: 40rem;
-  color: #475569;
-  font-size: clamp(1rem, 2.2vw, 1.15rem);
+  margin: 0 0 1.75rem;
+  max-width: 34rem;
+  color: var(--mkt-muted);
+  font-size: clamp(1rem, 1.8vw, 1.12rem);
   line-height: 1.65;
 }
 
+.mkt-hero--compact .mkt-hero-sub {
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .mkt-hero-actions {
-  position: relative;
   display: flex;
-  gap: 0.75rem;
-  justify-content: center;
+  gap: 0.7rem;
+  align-items: center;
   flex-wrap: wrap;
 }
 
-.mkt-renew-meta {
+.mkt-hero-visual {
   position: relative;
-  margin-top: 0.75rem;
-  color: #64748b;
-  font-size: 0.85rem;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  min-height: min(42vw, 22rem);
+  animation: mkt-rise 1s 0.08s ease both;
+}
+
+@keyframes mkt-rise {
+  from {
+    transform: translateY(16px);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.mkt-hero-mark {
+  position: relative;
+  width: min(100%, 26rem);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+}
+
+.mkt-hero-mark-ring {
+  position: absolute;
+  inset: 8%;
+  border: 1px solid rgba(32, 152, 176, 0.28);
+  border-radius: 50%;
+  animation: mkt-spin 28s linear infinite;
+}
+
+.mkt-hero-mark-ring--inner {
+  inset: 18%;
+  border-style: dashed;
+  border-color: rgba(32, 152, 176, 0.18);
+  animation-direction: reverse;
+  animation-duration: 40s;
+}
+
+.mkt-hero-mark img {
+  position: relative;
+  width: 72%;
+  height: auto;
+  mix-blend-mode: screen;
+  filter: drop-shadow(0 0 36px rgba(32, 152, 176, 0.2));
+  animation: mkt-float 7s ease-in-out infinite;
+}
+
+@keyframes mkt-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes mkt-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.mkt-hero-renew {
+  color: var(--mkt-muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(32, 152, 176, 0.55);
+  padding: 0.3rem 0.05rem;
+  transition: color 0.2s ease;
+}
+
+.mkt-hero-renew:hover {
+  color: var(--mkt-cyan-bright);
 }
 
 .mkt-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.75rem 1.2rem;
-  border-radius: 0.75rem;
+  padding: 0.78rem 1.2rem;
+  border-radius: 0.45rem;
   font-weight: 600;
   font-size: 0.9rem;
   text-decoration: none;
   border: none;
   cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.mkt-btn:hover {
+  transform: translateY(-1px);
 }
 
 .mkt-btn--primary {
-  background: linear-gradient(135deg, #0ea5e9, #14b8a6);
-  color: #fff;
-  box-shadow: 0 10px 28px rgba(14, 165, 233, 0.3);
+  background: var(--mkt-cyan);
+  color: #041016;
+}
+
+.mkt-btn--primary:hover {
+  background: var(--mkt-cyan-bright);
 }
 
 .mkt-btn--ghost {
-  background: #fff;
-  color: #0369a1;
-  border: 1px solid rgba(14, 165, 233, 0.25);
+  background: transparent;
+  color: var(--mkt-ink);
+  border: 1px solid rgba(243, 247, 249, 0.18);
 }
 
+.mkt-btn--ghost:hover {
+  border-color: var(--mkt-cyan);
+  color: var(--mkt-cyan-bright);
+}
+
+/* ── Trust ── */
+
+.mkt-trust-strip {
+  padding: 1.5rem clamp(1rem, 4vw, 2.75rem) 1.85rem;
+  border-block: 1px solid var(--mkt-line);
+  background: rgba(14, 18, 22, 0.65);
+}
+
+.mkt-trust-label {
+  margin: 0 auto 1rem;
+  text-align: center;
+  font-family: var(--mkt-mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mkt-faint);
+}
+
+.mkt-trust-marquee {
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+}
+
+.mkt-trust-names {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 2.75rem;
+  width: max-content;
+  animation: mkt-marquee 40s linear infinite;
+}
+
+.mkt-trust-names li {
+  font-size: clamp(0.95rem, 1.6vw, 1.1rem);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--mkt-muted);
+  white-space: nowrap;
+}
+
+@keyframes mkt-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* ── Sections ── */
+
 .mkt-section {
-  padding: 2.5rem clamp(1rem, 4vw, 2.5rem) 3rem;
+  padding: clamp(3.25rem, 8vw, 5.5rem) clamp(1rem, 4vw, 2.75rem);
   max-width: 72rem;
   margin: 0 auto;
+  scroll-margin-top: 5rem;
 }
 
 .mkt-section--soft {
-  background: rgba(240, 249, 255, 0.7);
   max-width: none;
+  background: linear-gradient(180deg, transparent, rgba(32, 152, 176, 0.05), transparent);
+  border-block: 1px solid var(--mkt-line);
+}
+
+.mkt-section--soft > .mkt-section-head,
+.mkt-section--soft > .mkt-custom-list,
+.mkt-section--soft > .mkt-section-cta,
+.mkt-section--soft > .mkt-say-list,
+.mkt-section--soft > .mkt-trust {
+  width: min(72rem, calc(100% - 2 * clamp(1rem, 4vw, 2.75rem)));
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .mkt-section-head {
-  text-align: center;
-  margin-bottom: 1.75rem;
+  margin-bottom: 2.25rem;
+  max-width: 36rem;
 }
 
 .mkt-section-head h2 {
-  margin: 0 0 0.5rem;
-  font-family: var(--font-display);
-  font-size: clamp(1.4rem, 3vw, 2rem);
-  color: #0c4a6e;
+  margin: 0 0 0.6rem;
+  font-size: clamp(1.65rem, 3.5vw, 2.35rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--mkt-ink);
+  line-height: 1.15;
 }
 
 .mkt-section-head p {
   margin: 0;
-  color: #64748b;
+  color: var(--mkt-muted);
+  font-size: 1.02rem;
+  line-height: 1.6;
 }
+
+.mkt-section-cta {
+  display: flex;
+  margin-top: 1.75rem;
+}
+
+/* ── Products ── */
+
+.mkt-product-list {
+  display: grid;
+  gap: 0;
+}
+
+.mkt-product-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1.5rem 2rem;
+  align-items: end;
+  padding: 1.85rem 0;
+  border-bottom: 1px solid var(--mkt-line);
+}
+
+.mkt-product-row:first-child {
+  border-top: 1px solid var(--mkt-line);
+}
+
+.mkt-product-platforms {
+  display: inline-block;
+  margin-bottom: 0.45rem;
+  font-family: var(--mkt-mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mkt-cyan);
+}
+
+.mkt-product-row h3 {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.2rem, 2.2vw, 1.5rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--mkt-ink);
+}
+
+.mkt-product-row p {
+  margin: 0;
+  color: var(--mkt-muted);
+  line-height: 1.6;
+  max-width: 40rem;
+}
+
+.mkt-product-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  justify-content: flex-end;
+}
+
+/* ── Custom ── */
+
+.mkt-custom-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem 1.25rem;
+}
+
+.mkt-custom-list li {
+  padding: 1.05rem 1.1rem;
+  font-size: 1.02rem;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  color: var(--mkt-ink);
+  background: var(--mkt-bg-elev);
+  border: 1px solid var(--mkt-line);
+  border-left: 2px solid var(--mkt-cyan);
+  border-radius: 0.35rem;
+}
+
+/* ── Work ── */
+
+.mkt-work-list {
+  display: grid;
+  gap: 0;
+}
+
+.mkt-work-item {
+  padding: 1.7rem 0;
+  border-bottom: 1px solid var(--mkt-line);
+  transition: background 0.25s ease, padding-left 0.25s ease;
+}
+
+.mkt-work-item:first-child {
+  border-top: 1px solid var(--mkt-line);
+}
+
+.mkt-work-item:hover {
+  padding-left: 0.5rem;
+  background: linear-gradient(90deg, var(--mkt-cyan-dim), transparent 55%);
+}
+
+.mkt-work-item h3 {
+  margin: 0 0 0.3rem;
+  font-size: clamp(1.15rem, 2.2vw, 1.4rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--mkt-ink);
+}
+
+.mkt-work-client {
+  margin: 0 0 0.7rem;
+  font-family: var(--mkt-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mkt-cyan);
+}
+
+.mkt-work-outcome {
+  margin: 0 0 0.55rem;
+  color: var(--mkt-muted);
+  line-height: 1.65;
+  max-width: 46rem;
+}
+
+.mkt-work-stack {
+  margin: 0;
+  font-family: var(--mkt-mono);
+  font-size: 0.78rem;
+  color: var(--mkt-faint);
+}
+
+.mkt-work-link {
+  display: inline-block;
+  margin-top: 0.6rem;
+  color: var(--mkt-cyan-bright);
+  font-weight: 500;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(47, 192, 216, 0.4);
+}
+
+/* ── Say ── */
+
+.mkt-say-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5rem 1.75rem;
+}
+
+.mkt-say-item {
+  margin: 0;
+  padding: 1.35rem 1.25rem;
+  border: 1px solid var(--mkt-line);
+  border-radius: 0.5rem;
+  background: var(--mkt-bg-elev);
+}
+
+.mkt-say-item > p {
+  margin: 0 0 1rem;
+  font-size: 1.02rem;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: -0.015em;
+  color: var(--mkt-ink);
+}
+
+.mkt-say-item footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.mkt-say-item cite {
+  font-style: normal;
+  font-weight: 600;
+  font-size: 0.86rem;
+  color: var(--mkt-cyan-bright);
+}
+
+.mkt-say-item span {
+  font-size: 0.8rem;
+  color: var(--mkt-faint);
+}
+
+/* ── Contact ── */
+
+.mkt-contact .mkt-contact-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+/* ── Pricing ── */
 
 .mkt-pricing-grid {
   display: grid;
@@ -214,16 +674,15 @@
 .mkt-plan-card,
 .mkt-storage-card {
   position: relative;
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(14, 165, 233, 0.14);
-  border-radius: 1.25rem;
+  background: var(--mkt-bg-elev);
+  border: 1px solid var(--mkt-line);
+  border-radius: 0.65rem;
   padding: 1.35rem 1.25rem 1.4rem;
-  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.05);
 }
 
 .mkt-plan-card--featured {
-  border-color: rgba(20, 184, 166, 0.45);
-  box-shadow: 0 18px 48px rgba(14, 165, 233, 0.14);
+  border-color: rgba(32, 152, 176, 0.45);
+  box-shadow: 0 0 0 1px rgba(32, 152, 176, 0.12);
 }
 
 .mkt-plan-badge {
@@ -234,59 +693,60 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #0f766e;
-  background: rgba(45, 212, 191, 0.18);
+  color: var(--mkt-cyan-bright);
+  background: var(--mkt-cyan-dim);
   padding: 0.25rem 0.5rem;
-  border-radius: 999px;
+  border-radius: 0.3rem;
 }
 
 .mkt-offer-badge {
   display: inline-block;
   margin-bottom: 0.55rem;
   font-size: 0.68rem;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #9a3412;
-  background: rgba(251, 146, 60, 0.22);
+  color: var(--mkt-cyan-bright);
+  background: var(--mkt-cyan-dim);
   padding: 0.28rem 0.55rem;
-  border-radius: 0.4rem;
+  border-radius: 0.3rem;
 }
 
 .mkt-plan-card h3,
 .mkt-storage-card h3 {
   margin: 0 0 0.5rem;
   font-size: 1.15rem;
-  color: #0c4a6e;
+  color: var(--mkt-ink);
 }
 
 .mkt-plan-list-price {
   margin: 0 0 0.15rem;
   font-size: 0.95rem;
-  color: #94a3b8;
+  color: var(--mkt-faint);
 }
 
 .mkt-plan-list-price s {
-  color: #64748b;
+  color: var(--mkt-muted);
   margin-right: 0.35rem;
 }
 
 .mkt-plan-list-price span {
   font-size: 0.78rem;
-  color: #94a3b8;
+  color: var(--mkt-faint);
 }
 
 .mkt-plan-price {
   margin: 0 0 0.35rem;
-  font-family: var(--font-display);
   font-size: 2rem;
-  color: #0369a1;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--mkt-cyan-bright);
 }
 
 .mkt-plan-price span {
-  font-family: var(--font-body);
   font-size: 0.85rem;
-  color: #64748b;
+  font-weight: 500;
+  color: var(--mkt-muted);
   margin-left: 0.25rem;
 }
 
@@ -294,13 +754,13 @@
   margin: 0 0 0.75rem;
   font-size: 0.8rem;
   font-weight: 600;
-  color: #c2410c;
+  color: var(--mkt-cyan);
 }
 
 .mkt-plan-storage,
 .mkt-plan-tagline,
 .mkt-plan-includes {
-  color: #64748b;
+  color: var(--mkt-muted);
   font-size: 0.88rem;
   margin: 0 0 0.65rem;
 }
@@ -317,7 +777,7 @@
   position: relative;
   padding-left: 1.1rem;
   font-size: 0.84rem;
-  color: #334155;
+  color: var(--mkt-muted);
   line-height: 1.4;
 }
 
@@ -325,7 +785,7 @@
   content: "✓";
   position: absolute;
   left: 0;
-  color: #14b8a6;
+  color: var(--mkt-cyan);
   font-weight: 700;
 }
 
@@ -342,20 +802,22 @@
 .mkt-trust li {
   text-align: center;
   padding: 0.9rem 0.75rem;
-  border-radius: 0.9rem;
-  background: #fff;
-  border: 1px solid rgba(14, 165, 233, 0.12);
+  border-radius: 0.45rem;
+  background: var(--mkt-bg-elev);
+  border: 1px solid var(--mkt-line);
   font-size: 0.85rem;
-  font-weight: 600;
-  color: #0c4a6e;
+  font-weight: 500;
+  color: var(--mkt-muted);
 }
 
+/* ── Footer ── */
+
 .mkt-footer {
-  margin-top: 2rem;
-  padding: 2rem clamp(1rem, 4vw, 2.5rem);
-  border-top: 1px solid rgba(14, 165, 233, 0.12);
-  background: #0c4a6e;
-  color: #e0f2fe;
+  margin-top: 0;
+  padding: 2.5rem clamp(1rem, 4vw, 2.75rem);
+  background: #040608;
+  border-top: 1px solid var(--mkt-line);
+  color: var(--mkt-muted);
 }
 
 .mkt-footer-inner {
@@ -364,25 +826,94 @@
   gap: 1.5rem;
   flex-wrap: wrap;
   max-width: 72rem;
-  margin: 0 auto 1rem;
+  margin: 0 auto 1.25rem;
+}
+
+.mkt-footer strong {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--mkt-cyan-bright);
+  margin-bottom: 0.4rem;
+}
+
+.mkt-footer-address {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  color: var(--mkt-faint);
 }
 
 .mkt-footer a {
-  color: #7dd3fc;
+  color: var(--mkt-ink);
   text-decoration: none;
+  border-bottom: 1px solid rgba(32, 152, 176, 0.45);
 }
 
 .mkt-footer-links {
   display: flex;
-  gap: 1rem;
+  gap: 1.1rem;
   flex-wrap: wrap;
+  align-items: flex-start;
 }
 
 .mkt-footer-copy {
   max-width: 72rem;
   margin: 0 auto;
   font-size: 0.8rem;
-  color: #7dd3fc;
+  color: var(--mkt-faint);
+}
+
+@media (max-width: 900px) {
+  .mkt-hero--company {
+    grid-template-columns: 1fr;
+    min-height: auto;
+    padding-top: 2.5rem;
+    padding-bottom: 3rem;
+  }
+
+  .mkt-hero-visual {
+    min-height: 14rem;
+  }
+
+  .mkt-hero-mark {
+    width: min(100%, 16rem);
+  }
+
+  .mkt-say-list {
+    grid-template-columns: 1fr;
+  }
+
+  .mkt-custom-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .mkt-nav-brand em {
+    display: none;
+  }
+
+  .mkt-hero-brand {
+    letter-spacing: 0.18em;
+  }
+
+  .mkt-product-row {
+    grid-template-columns: 1fr;
+  }
+
+  .mkt-product-actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mkt-hero-mark-ring,
+  .mkt-hero-mark img,
+  .mkt-trust-names {
+    animation: none !important;
+  }
 }
 
 /* Google-style Tax Invoice */
@@ -928,9 +1459,9 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.85rem;
-  background: #fff;
-  border: 1px solid rgba(14, 165, 233, 0.14);
-  border-radius: 1rem;
+  background: var(--mkt-bg-elev, #0e1216);
+  border: 1px solid var(--mkt-line, rgba(243, 247, 249, 0.08));
+  border-radius: 0.65rem;
   padding: 1.1rem;
 }
 
@@ -941,7 +1472,7 @@
   gap: 0.35rem;
   font-size: 0.78rem;
   font-weight: 600;
-  color: #475569;
+  color: var(--mkt-muted, #8b9aa3);
 }
 
 .renew-full {
@@ -953,27 +1484,28 @@
 .renew-grid textarea,
 .renew-proof-form input {
   padding: 0.65rem 0.75rem;
-  border-radius: 0.6rem;
-  border: 1px solid rgba(148, 163, 184, 0.45);
+  border-radius: 0.45rem;
+  border: 1px solid rgba(243, 247, 249, 0.12);
   font-size: 0.95rem;
-  color: #0f172a;
-  background: #f8fafc;
+  color: var(--mkt-ink, #f3f7f9);
+  background: #0a0d10;
 }
 
 .renew-summary,
 .renew-upi,
 .renew-done {
-  background: #fff;
-  border: 1px solid rgba(14, 165, 233, 0.14);
-  border-radius: 1rem;
+  background: var(--mkt-bg-elev, #0e1216);
+  border: 1px solid var(--mkt-line, rgba(243, 247, 249, 0.08));
+  border-radius: 0.65rem;
   padding: 1.2rem;
   height: fit-content;
+  color: var(--mkt-muted, #8b9aa3);
 }
 
 .renew-total {
   font-size: 1.35rem;
   font-weight: 700;
-  color: #0369a1;
+  color: var(--mkt-cyan-bright, #2fc0d8);
 }
 
 .renew-offer-banner {
@@ -981,13 +1513,13 @@
   padding: 0.55rem 0.7rem;
   font-size: 0.82rem;
   font-weight: 700;
-  color: #9a3412;
-  background: rgba(251, 146, 60, 0.16);
-  border-radius: 0.5rem;
+  color: var(--mkt-cyan-bright, #2fc0d8);
+  background: var(--mkt-cyan-dim, rgba(32, 152, 176, 0.16));
+  border-radius: 0.4rem;
 }
 
 .renew-discount {
-  color: #c2410c;
+  color: var(--mkt-cyan, #2098b0);
   font-weight: 600;
 }
 

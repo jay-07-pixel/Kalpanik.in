@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { COMPANY } from "../../constants/company";
 import {
   BRAND,
   EXTRA_STORAGE_LIST_PRICE_PER_GB,
@@ -93,16 +94,20 @@ export function SiteFooter() {
     <footer className="mkt-footer">
       <div className="mkt-footer-inner">
         <div>
-          <strong>{BRAND.name}</strong>
-          <p>{BRAND.tagline}</p>
+          <strong>{COMPANY.brand}</strong>
+          <p>{COMPANY.tagline}</p>
+          <p className="mkt-footer-address">{COMPANY.addressSnippet}</p>
         </div>
         <div className="mkt-footer-links">
+          <Link to="/#products">Products</Link>
           <Link to="/pricing">Pricing</Link>
-          <Link to="/renew">Renew Subscription</Link>
-          <a href={`mailto:${BRAND.supportEmail}`}>{BRAND.supportEmail}</a>
+          <Link to="/renew">Renew</Link>
+          <a href={`mailto:${COMPANY.emails[0]}`}>{COMPANY.emails[0]}</a>
         </div>
       </div>
-      <p className="mkt-footer-copy">© {new Date().getFullYear()} Kalpanik. All rights reserved.</p>
+      <p className="mkt-footer-copy">
+        © {new Date().getFullYear()} {COMPANY.brand}. All rights reserved.
+      </p>
     </footer>
   );
 }

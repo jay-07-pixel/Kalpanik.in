@@ -26,18 +26,17 @@ export const BRAND = {
 } as const;
 
 export const SPECIAL_DISCOUNT_PERCENT = 50;
-/** TEST: set to 0 to use real pricing. Flat total charged on every invoice. */
-export const TEST_FLAT_BILL_INR = 1;
-/** TEST: set back to 100 / 200 for production */
-export const EXTRA_STORAGE_PRICE_PER_GB = 1;
-export const EXTRA_STORAGE_LIST_PRICE_PER_GB = 2;
+/** Set > 0 only for test billing (flat invoice total). Use 0 in production. */
+export const TEST_FLAT_BILL_INR = 0;
+export const EXTRA_STORAGE_PRICE_PER_GB = 100;
+export const EXTRA_STORAGE_LIST_PRICE_PER_GB = 200;
 
 export const PLANS: Record<PlanId, PlanDefinition> = {
   task_management: {
     id: "task_management",
     name: "Task Management",
-    pricePerUser: 1,
-    listPricePerUser: 2,
+    pricePerUser: 299,
+    listPricePerUser: 598,
     storageGbPerUser: 1,
     tagline: "Complete task & team collaboration suite",
     features: [
@@ -62,8 +61,8 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
   task_attendance: {
     id: "task_attendance",
     name: "Task + Attendance",
-    pricePerUser: 1,
-    listPricePerUser: 2,
+    pricePerUser: 349,
+    listPricePerUser: 698,
     storageGbPerUser: 1,
     tagline: "Everything in Task Management + field & attendance",
     includesPrevious: true,
